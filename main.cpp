@@ -42,10 +42,22 @@ SDL_Window* init_GL() {
     GLenum err;
     while((err = glGetError()) != GL_NO_ERROR)
     {
-        fprintf(stderr,"GL Error! %i\n",err);
+        fprintf(stderr,"GL Error! %u\n",err);
     }
     
     return wnd;
+}
+
+void MyAudioCallback(void *userdata, Uint8 *stream, int len) {
+    
+    SDL_memset(stream, 0, len);
+    
+    Uint8** audio_ptr = (Uint8**) userdata;
+    
+    SDL_MixAudioFormat( stream, (Uint8*) *audio_ptr, AUDIO_F32, len, SDL_MIX_MAXVOLUME / 2);
+    
+    *audio_ptr += len;
+    
 }
 
 int main(int argc, char** argv) {
@@ -63,6 +75,27 @@ int main(int argc, char** argv) {
     for (int i=0; i<input_data.num_samples; i++)
         input_data.signal[i] /= maxabs;
     
+    /* Set up audio playback */
+    SDL_AudioSpec want, have;
+    
+    float *current_audio_ptr = input_data.signal;
+    
+    SDL_memset(&want, 0, sizeof(want));
+    want.freq = 44100;
+    want.format = AUDIO_F32;
+    want.channels = 1;
+    want.samples = 8192;
+    want.callback = MyAudioCallback;
+    want.userdata = (void*) &current_audio_ptr;
+            
+    if (SDL_OpenAudio(&want, &have) < 0) {
+        SDL_Log("Failed to open audio: %s", SDL_GetError());
+    } else {
+        if (have.format != want.format) {
+            SDL_Log("We didn't get Float32 audio format.");
+        }
+    }
+    
     /*  Initialize window and context  */
     SDL_Window* wnd = init_GL();
     
@@ -75,7 +108,7 @@ int main(int argc, char** argv) {
     glUniform1f(fsUniform, input_data.sample_rate);
     
     /* Add x-scaling factor based on time window */
-    float window_duration = 5;
+    float window_duration = .025;
     GLint windurUniform = glGetUniformLocation(shaderProgram, "window_duration");
     glUniform1f( windurUniform, window_duration );
     
@@ -104,6 +137,9 @@ int main(int argc, char** argv) {
     Uint64 time_start = SDL_GetPerformanceCounter();
     float current_time;
     glUniform1f(timeUniform,0);
+    
+    /* Start audio */
+    SDL_PauseAudio(0);
     
     /*  Render Loop  */
     loop = [&]
