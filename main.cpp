@@ -47,63 +47,6 @@ SDL_Window* init_GL() {
     
     return wnd;
 }
-/*
-struct Mesh {
-    GLuint VAO;
-    unsigned long numVertices;
-    GLenum renderMode;
-};
-
-class VertexManager
-{
-    private:
-        std::vector<std::unique_ptr<Mesh>> Meshes;
-        GLint *posAttrib;
-        
-    public:
-        void setPosAttrib(GLint*);
-        void addMesh( GLfloat* vertices, unsigned long numVertices, GLenum renderMode );
-        void render();
-};
-
-void VertexManager::setPosAttrib(GLint* NewPosAttrib)
-{
-    posAttrib = NewPosAttrib;
-}
-
-void VertexManager::addMesh( GLfloat *vertices, unsigned long numVertices, GLenum renderMode )
-{
-    
-    Meshes.push_back(std::unique_ptr<Mesh>(new Mesh));
-    Meshes.back().get()->numVertices = numVertices;
-    Meshes.back().get()->renderMode = renderMode;
-        
-    glGenVertexArraysOES(1, &Meshes.back().get()->VAO );
-    glBindVertexArrayOES( Meshes.back().get()->VAO );
-    
-    std::shared_ptr<GLuint> vbo = std::make_shared<GLuint>();
-    glGenBuffers(1, vbo.get());
-    
-    
-    
-    glBindBuffer(GL_ARRAY_BUFFER, *vbo.get());
-    glBufferData(GL_ARRAY_BUFFER, 2*numVertices*sizeof(GLfloat), vertices, GL_STATIC_DRAW);
-    
-    // Specify the layout of the vertex data
-    glEnableVertexAttribArray(*posAttrib);
-    glVertexAttribPointer(*posAttrib, 2, GL_FLOAT, GL_FALSE, 0, 0);
-    
-}
-
-void VertexManager::render()
-{
-    for (unsigned long i=0; i<Meshes.size(); i++)
-    {
-        glBindVertexArrayOES(Meshes.at(i).get()->VAO);
-        glDrawArrays(Meshes.at(i).get()->renderMode, 0, Meshes.at(i).get()->numVertices);
-    }
-}
-*/
 
 int main(int argc, char** argv) {
     
