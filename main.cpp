@@ -127,9 +127,14 @@ int main(int argc, char** argv) {
     GLuint shaderProgram = setup_shaders("shaders/vert_direct.glsl", "shaders/frag_plain.glsl");
     GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
     
-    /* Add x-scaling factor based on total number of vertices */
-    GLint loc = glGetUniformLocation(shaderProgram, "xScale");
-    glUniform1f(loc, 2.0f / input_data.num_samples);
+    GLint timeUniform = glGetUniformLocation(shaderProgram, "current_time");
+    GLint fsUniform = glGetUniformLocation(shaderProgram, "sample_rate");
+    glUniform1f(fsUniform, input_data.sample_rate);
+    
+    /* Add x-scaling factor based on time window */
+    float window_duration = 5;
+    GLint windurUniform = glGetUniformLocation(shaderProgram, "window_duration");
+    glUniform1f( windurUniform, window_duration );
     
     /* Set up vertex array object */
     GLuint VAO;
@@ -152,6 +157,11 @@ int main(int argc, char** argv) {
         return 1;
     }
     
+    /* Setup timer */
+    Uint64 time_start = SDL_GetPerformanceCounter();
+    float current_time;
+    glUniform1f(timeUniform,0);
+    
     /*  Render Loop  */
     loop = [&]
     {
@@ -165,6 +175,10 @@ int main(int argc, char** argv) {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        // Update current time
+        current_time = (SDL_GetPerformanceCounter() - time_start) / (float) SDL_GetPerformanceFrequency();
+        glUniform1f(timeUniform,current_time);
+        
         // Render
         glDrawArrays(GL_LINE_STRIP, 0, input_data.num_samples);
 
