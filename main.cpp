@@ -47,7 +47,7 @@ SDL_Window* init_GL() {
     
     return wnd;
 }
-
+/*
 struct Mesh {
     GLuint VAO;
     unsigned long numVertices;
@@ -103,13 +103,23 @@ void VertexManager::render()
         glDrawArrays(Meshes.at(i).get()->renderMode, 0, Meshes.at(i).get()->numVertices);
     }
 }
+*/
 
 int main(int argc, char** argv) {
     
     /* Load audio data */
     audio_data input_data;
     load_audio( "/tmp/tmp.ogg" , &input_data );
-        
+    
+    /* Get maximum absolute value for rescaling */
+    float maxabs = 0;
+    for (int i=0; i<input_data.num_samples; i++)
+        maxabs = max(maxabs,abs(input_data.signal[i]));
+    
+    /* Rescale signal (-1 to 1) */
+    for (int i=0; i<input_data.num_samples; i++)
+        input_data.signal[i] /= maxabs;
+    
     /*  Initialize window and context  */
     SDL_Window* wnd = init_GL();
     
@@ -117,27 +127,30 @@ int main(int argc, char** argv) {
     GLuint shaderProgram = setup_shaders("shaders/vert_direct.glsl", "shaders/frag_plain.glsl");
     GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
     
+    /* Add x-scaling factor based on total number of vertices */
+    GLint loc = glGetUniformLocation(shaderProgram, "xScale");
+    glUniform1f(loc, 2.0f / input_data.num_samples);
+    
+    /* Set up vertex array object */
+    GLuint VAO;
+    glGenVertexArraysOES(1, &VAO );
+    glBindVertexArrayOES( VAO );
+    
+    /* Set up vertex buffer object */
+    GLuint vbo;
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, input_data.num_samples*sizeof(GLfloat), input_data.signal, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(posAttrib);
+    glVertexAttribPointer(posAttrib, 1, GL_FLOAT, GL_FALSE, 0, 0);
+    
     /* Check for GL errors */
     GLenum err;
     while((err = glGetError()) != GL_NO_ERROR)
     {
-        fprintf(stderr,"GL Error! %i\n",err);
+        fprintf(stderr,"GL Error! %u\n",err);
         return 1;
     }
-    
-    
-    /* Setup the vertex manager */
-    VertexManager vertman;
-    vertman.setPosAttrib(&posAttrib);
-    
-    /* Add signal mesh */
-    vertman.addMesh( input_data.signal , input_data.num_samples , GL_LINE_STRIP );
-    
-    
-    // Reset buffer
-    //glBindBuffer(GL_ARRAY_BUFFER,0);
-    //glBindVertexArrayOES(0);
-    
     
     /*  Render Loop  */
     loop = [&]
@@ -152,7 +165,8 @@ int main(int argc, char** argv) {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        vertman.render();
+        // Render
+        glDrawArrays(GL_LINE_STRIP, 0, input_data.num_samples);
 
         while ((err = glGetError()) != GL_NO_ERROR) {
             cerr << "OpenGL error: " << err << endl;
