@@ -62,9 +62,14 @@ void MyAudioCallback(void *userdata, Uint8 *stream, int len) {
 
 int main(int argc, char** argv) {
     
+    if (argc<2) {
+        fprintf(stderr,"Please supply a filename to a music file.\n");
+        return EXIT_FAILURE;
+    }
+    
     /* Load audio data */
     audio_data input_data;
-    load_audio( "/tmp/tmp.ogg" , &input_data );
+    load_audio( argv[1] , &input_data );
     
     /* Get maximum absolute value for rescaling */
     float maxabs = 0;
