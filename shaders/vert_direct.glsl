@@ -1,4 +1,4 @@
-#version 130
+R"(#version 130
 
 attribute float position;
 uniform float sample_rate;
@@ -15,4 +15,4 @@ void main(void){
 
     gl_Position = vec4(xPos, position, 1.0, 1.0);
 
-}
+})"

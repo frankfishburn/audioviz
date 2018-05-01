@@ -18,6 +18,15 @@
 #include "shaders.h"
 #include "load_audio.h"
 
+const char *vertex_source = 
+#include "shaders/vert_direct.glsl"
+;
+
+const char *fragment_source = 
+#include "shaders/frag_plain.glsl"
+;
+
+
 using namespace std;
 
 std::function<void()> loop;
@@ -105,7 +114,7 @@ int main(int argc, char** argv) {
     SDL_Window* wnd = init_GL();
     
     /*  Setup shaders  */
-    GLuint shaderProgram = setup_shaders("shaders/vert_direct.glsl", "shaders/frag_plain.glsl");
+    GLuint shaderProgram = setup_shaders_source(vertex_source, fragment_source);
     GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
     
     GLint timeUniform = glGetUniformLocation(shaderProgram, "current_time");
