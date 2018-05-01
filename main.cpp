@@ -80,13 +80,17 @@ int main(int argc, char** argv) {
     audio_data input_data;
     load_audio( argv[1] , &input_data );
     
+    const unsigned int sample_rate = input_data.sample_rate;
+    const unsigned int num_samples = input_data.num_samples;
+    const unsigned int num_channels = input_data.num_channels;
+    
     /* Set up audio playback */
     SDL_AudioSpec want, have;
     
     float *current_audio_ptr = input_data.signal;
     
     SDL_memset(&want, 0, sizeof(want));
-    want.freq = 44100;
+    want.freq = sample_rate;
     want.format = AUDIO_F32;
     want.channels = 1;
     want.samples = 8192;
@@ -110,7 +114,7 @@ int main(int argc, char** argv) {
     
     GLint timeUniform = glGetUniformLocation(shaderProgram, "current_time");
     GLint fsUniform = glGetUniformLocation(shaderProgram, "sample_rate");
-    glUniform1f(fsUniform, input_data.sample_rate);
+    glUniform1f(fsUniform, sample_rate);
     
     /* Add x-scaling factor based on time window */
     float window_duration = .025;
@@ -123,13 +127,12 @@ int main(int argc, char** argv) {
     glBindVertexArrayOES( VAO );
     
     /* Set up vertex buffer objects */
-    GLuint vbo[input_data.num_channels];
-    glGenBuffers(input_data.num_channels, vbo);
-    for (int channel=0; channel<input_data.num_channels; channel++) {
+    GLuint vbo[num_channels];
+    glGenBuffers(num_channels, vbo);
+    for (int channel=0; channel<num_channels; channel++) {
         glBindBuffer(GL_ARRAY_BUFFER, vbo[channel]);
-        glBufferData(GL_ARRAY_BUFFER, input_data.num_samples*sizeof(GLfloat), input_data.signal+channel*input_data.num_samples, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, num_samples*sizeof(GLfloat), input_data.signal+channel*num_samples, GL_STATIC_DRAW);
     }
-    
     glEnableVertexAttribArray(posAttrib);
     
     /* Check for GL errors */
@@ -166,11 +169,11 @@ int main(int argc, char** argv) {
         glUniform1f(timeUniform,current_time);
         
         // Render each channel
-        for (int channel=0; channel<input_data.num_channels; channel++){
+        for (int channel=0; channel<num_channels; channel++){
         
             glBindBuffer(GL_ARRAY_BUFFER, vbo[channel]);
             glVertexAttribPointer(posAttrib, 1, GL_FLOAT, GL_FALSE, 0, 0);
-            glDrawArrays(GL_LINE_STRIP, 0, input_data.num_samples);
+            glDrawArrays(GL_LINE_STRIP, 0, num_samples);
         }
         
         while ((err = glGetError()) != GL_NO_ERROR) {
