@@ -80,15 +80,6 @@ int main(int argc, char** argv) {
     audio_data input_data;
     load_audio( argv[1] , &input_data );
     
-    /* Get maximum absolute value for rescaling */
-    float maxabs = 0;
-    for (int i=0; i<input_data.num_samples; i++)
-        maxabs = max(maxabs,abs(input_data.signal[i]));
-    
-    /* Rescale signal (-1 to 1) */
-    for (int i=0; i<input_data.num_samples; i++)
-        input_data.signal[i] /= maxabs;
-    
     /* Set up audio playback */
     SDL_AudioSpec want, have;
     
