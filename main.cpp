@@ -122,13 +122,15 @@ int main(int argc, char** argv) {
     glGenVertexArraysOES(1, &VAO );
     glBindVertexArrayOES( VAO );
     
-    /* Set up vertex buffer object */
-    GLuint vbo;
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, input_data.num_samples*sizeof(GLfloat), input_data.signal, GL_STATIC_DRAW);
+    /* Set up vertex buffer objects */
+    GLuint vbo[input_data.num_channels];
+    glGenBuffers(input_data.num_channels, vbo);
+    for (int channel=0; channel<input_data.num_channels; channel++) {
+        glBindBuffer(GL_ARRAY_BUFFER, vbo[channel]);
+        glBufferData(GL_ARRAY_BUFFER, input_data.num_samples*sizeof(GLfloat), input_data.signal+channel*input_data.num_samples, GL_STATIC_DRAW);
+    }
+    
     glEnableVertexAttribArray(posAttrib);
-    glVertexAttribPointer(posAttrib, 1, GL_FLOAT, GL_FALSE, 0, 0);
     
     /* Check for GL errors */
     GLenum err;
@@ -163,9 +165,14 @@ int main(int argc, char** argv) {
         current_time = (SDL_GetPerformanceCounter() - time_start) / (float) SDL_GetPerformanceFrequency();
         glUniform1f(timeUniform,current_time);
         
-        // Render
-        glDrawArrays(GL_LINE_STRIP, 0, input_data.num_samples);
-
+        // Render each channel
+        for (int channel=0; channel<input_data.num_channels; channel++){
+        
+            glBindBuffer(GL_ARRAY_BUFFER, vbo[channel]);
+            glVertexAttribPointer(posAttrib, 1, GL_FLOAT, GL_FALSE, 0, 0);
+            glDrawArrays(GL_LINE_STRIP, 0, input_data.num_samples);
+        }
+        
         while ((err = glGetError()) != GL_NO_ERROR) {
             cerr << "OpenGL error: " << err << endl;
         }
