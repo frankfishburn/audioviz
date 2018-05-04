@@ -2,17 +2,12 @@
 #include <exception>
 #include <functional>
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
-
-#define GL_GLEXT_PROTOTYPES 1
-#include <SDL2/SDL_opengles2.h>
-
 #include <vector>
 #include <iostream>
 #include <memory>
 
+#include "opengl.h"
+#include "audio_playback.h"
 #include "shaders.h"
 #include "load_audio.h"
 
@@ -30,43 +25,6 @@ using namespace std;
 std::function<void()> loop;
 void main_loop() { loop(); }
 
-SDL_Window* init_GL() {
-    SDL_Window* wnd(
-        SDL_CreateWindow("audioviz", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-            640, 480, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN));
-
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-    SDL_GL_SetSwapInterval(0);
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-
-    auto glc = SDL_GL_CreateContext(wnd);
-
-    auto rdr = SDL_CreateRenderer(
-        wnd, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
-    
-    GLenum err;
-    while((err = glGetError()) != GL_NO_ERROR)
-    {
-        fprintf(stderr,"GL Error! %u\n",err);
-    }
-    
-    return wnd;
-}
-
-void MyAudioCallback(void *userdata, Uint8 *stream, int len) {
-    
-    SDL_memset(stream, 0, len);
-    
-    Uint8** audio_ptr = (Uint8**) userdata;
-    
-    SDL_MixAudioFormat( stream, (Uint8*) *audio_ptr, AUDIO_F32, len, SDL_MIX_MAXVOLUME / 2);
-    
-    *audio_ptr += len;
-    
-}
-
 int main(int argc, char** argv) {
     
     if (argc<2) {
@@ -81,28 +39,7 @@ int main(int argc, char** argv) {
     const unsigned int sample_rate = input_data.sample_rate;
     const unsigned int num_samples = input_data.num_samples;
     const unsigned int num_channels = input_data.num_channels;
-    
-    /* Set up audio playback */
-    SDL_AudioSpec want, have;
-    
-    float *current_audio_ptr = input_data.signal;
-    
-    SDL_memset(&want, 0, sizeof(want));
-    want.freq = sample_rate;
-    want.format = AUDIO_F32;
-    want.channels = 1;
-    want.samples = 8192;
-    want.callback = MyAudioCallback;
-    want.userdata = (void*) &current_audio_ptr;
-            
-    if (SDL_OpenAudio(&want, &have) < 0) {
-        SDL_Log("Failed to open audio: %s", SDL_GetError());
-    } else {
-        if (have.format != want.format) {
-            SDL_Log("We didn't get Float32 audio format.");
-        }
-    }
-    
+        
     /*  Initialize window and context  */
     SDL_Window* wnd = init_GL();
     
@@ -134,12 +71,7 @@ int main(int argc, char** argv) {
     glEnableVertexAttribArray(posAttrib);
     
     /* Check for GL errors */
-    GLenum err;
-    while((err = glGetError()) != GL_NO_ERROR)
-    {
-        fprintf(stderr,"GL Error! %u\n",err);
-        return 1;
-    }
+    glPrintErrors();
     
     /* Setup timer */
     Uint64 time_start = SDL_GetPerformanceCounter();
@@ -173,11 +105,7 @@ int main(int argc, char** argv) {
             glVertexAttribPointer(posAttrib, 1, GL_FLOAT, GL_FALSE, 0, 0);
             glDrawArrays(GL_LINE_STRIP, 0, num_samples);
         }
-        
-        while ((err = glGetError()) != GL_NO_ERROR) {
-            cerr << "OpenGL error: " << err << endl;
-        }
-        
+                
         SDL_GL_SwapWindow(wnd);
     };
 
