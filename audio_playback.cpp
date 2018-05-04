@@ -14,10 +14,8 @@ void MyAudioCallback(void *userdata, Uint8 *stream, int len) {
 }
 
 void audio_playback(audio_data *input_data) {
-    /* Set up audio playback */
+
     SDL_AudioSpec want, have;
-    
-    float *current_audio_ptr = input_data->signal;
     
     SDL_memset(&want, 0, sizeof(want));
     want.freq = input_data->sample_rate;
@@ -25,8 +23,8 @@ void audio_playback(audio_data *input_data) {
     want.channels = input_data->num_channels;
     want.samples = 8192;
     want.callback = MyAudioCallback;
-    want.userdata = (void*) &current_audio_ptr;
-            
+    want.userdata = (void*) &input_data->signal;
+    
     if (SDL_OpenAudio(&want, &have) < 0) {
         SDL_Log("Failed to open audio: %s", SDL_GetError());
     } else {

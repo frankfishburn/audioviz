@@ -19,7 +19,6 @@ const char *fragment_source =
 #include "shaders/frag_plain.glsl"
 ;
 
-
 using namespace std;
 
 std::function<void()> loop;
@@ -39,7 +38,10 @@ int main(int argc, char** argv) {
     const unsigned int sample_rate = input_data.sample_rate;
     const unsigned int num_samples = input_data.num_samples;
     const unsigned int num_channels = input_data.num_channels;
-        
+    
+    /* Setup audio playback */
+    audio_playback(&input_data);
+    
     /*  Initialize window and context  */
     SDL_Window* wnd = init_GL();
     

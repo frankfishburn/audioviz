@@ -29,30 +29,14 @@ void load_audio (const char *filename , audio_data *data )
     data->num_samples  = sfinfo.frames;
 
     // Allocate audio data arrays
-    float *tmpbuffer, *audiobuffer;
-    tmpbuffer      = (float*) malloc( sizeof(float) * data->num_channels * data->num_samples );
-    audiobuffer    = (float*) malloc( sizeof(float) * data->num_channels * data->num_samples );
-    data->signal = audiobuffer;
+    data->signal = (float*) malloc( sizeof(float) * data->num_channels * data->num_samples );
 
     // Read audio data to buffer
-    sf_readf_float(file, tmpbuffer , data->num_samples * data->num_channels );
+    sf_readf_float(file, data->signal , data->num_samples * data->num_channels );
 
     // Close audio file
     sf_close(file);
-
-    // Deinterleave so channels are one-after-another
-    unsigned long samp; unsigned int chan;
-    for (samp = 0; samp<data->num_samples; samp++)
-    {
-        for (chan = 0; chan<data->num_channels; chan++)
-        {
-            *(audiobuffer + samp + (data->num_samples*chan) ) =  *(tmpbuffer + (samp * data->num_channels + chan));
-        }
-    }
-
-    // Deallocate temporary buffer
-    free( tmpbuffer );
-
+    
     printf("Loaded file. %u channels @ %u Hz for %u samples\n",data->num_channels,data->sample_rate,data->num_samples);
     
     return;
