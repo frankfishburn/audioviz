@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
     
     // Setup audio playback
     audio_playback(&input_data);
-    
+
     // Initialize window and context
     SDL_Window* wnd = init_GL();
     
@@ -52,6 +52,8 @@ int main(int argc, char** argv) {
     GLint timeUniform = glGetUniformLocation(shaderProgram, "current_time");
     GLint fsUniform = glGetUniformLocation(shaderProgram, "sample_rate");
     glUniform1f(fsUniform, sample_rate);
+    
+    GLint rgbUniform = glGetUniformLocation(shaderProgram, "RGB");
     
     // Add x-scaling factor based on time window
     float window_duration = .025;
@@ -75,7 +77,8 @@ int main(int argc, char** argv) {
         glBindVertexArrayOES( VAO[channel] );
         //glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glEnableVertexAttribArray(ampAttrib);
-        glVertexAttribPointer(ampAttrib, 1, GL_FLOAT, GL_FALSE, num_channels*sizeof(float), (void*) (channel * sizeof(float)) );        
+        glVertexAttribPointer(ampAttrib, 1, GL_FLOAT, GL_FALSE, num_channels*sizeof(float), (void*) (channel * sizeof(float)) );
+        
     }
     
     // Check for GL errors
@@ -108,7 +111,15 @@ int main(int argc, char** argv) {
         
         // Render each channel
         for (int channel=0; channel<num_channels; channel++){
+            
             glBindVertexArrayOES( VAO[channel] );
+            
+            if (channel==0){
+                glUniform3f(rgbUniform, 1.0f, 0.0f, 0.0f);
+            } else {
+                glUniform3f(rgbUniform, 0.0f, 0.0f, 1.0f);
+            }
+            
             glDrawArrays(GL_LINE_STRIP, 0, num_samples);
         }
         
