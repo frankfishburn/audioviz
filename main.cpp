@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
     
-    /* Load audio data */
+    // Load audio data
     audio_data input_data;
     load_audio( argv[1] , &input_data );
     
@@ -39,13 +39,13 @@ int main(int argc, char** argv) {
     const unsigned int num_samples = input_data.num_samples;
     const unsigned int num_channels = input_data.num_channels;
     
-    /* Setup audio playback */
+    // Setup audio playback
     audio_playback(&input_data);
     
-    /*  Initialize window and context  */
+    // Initialize window and context
     SDL_Window* wnd = init_GL();
     
-    /*  Setup shaders  */
+    // Setup shaders
     GLuint shaderProgram = setup_shaders_source(vertex_source, fragment_source);
     GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
     
@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
     GLint fsUniform = glGetUniformLocation(shaderProgram, "sample_rate");
     glUniform1f(fsUniform, sample_rate);
     
-    /* Add x-scaling factor based on time window */
+    // Add x-scaling factor based on time window
     float window_duration = .025;
     GLint windurUniform = glGetUniformLocation(shaderProgram, "window_duration");
     glUniform1f( windurUniform, window_duration );
@@ -72,18 +72,18 @@ int main(int argc, char** argv) {
     }
     glEnableVertexAttribArray(posAttrib);
     
-    /* Check for GL errors */
+    // Check for GL errors
     glPrintErrors();
     
-    /* Setup timer */
+    // Setup timer
     Uint64 time_start = SDL_GetPerformanceCounter();
     float current_time;
     glUniform1f(timeUniform,0);
     
-    /* Start audio */
+    // Start audio
     SDL_PauseAudio(0);
     
-    /*  Render Loop  */
+    // Render Loop
     loop = [&]
     {
         SDL_Event e;
