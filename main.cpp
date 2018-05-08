@@ -58,19 +58,25 @@ int main(int argc, char** argv) {
     GLint windurUniform = glGetUniformLocation(shaderProgram, "window_duration");
     glUniform1f( windurUniform, window_duration );
     
-    /* Set up vertex array object */
-    GLuint VAO;
-    glGenVertexArraysOES(1, &VAO );
-    glBindVertexArrayOES( VAO );
+    // Set up vertex buffer object for interleaved audio data
+    GLuint vbo;
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, num_channels*num_samples*sizeof(GLfloat), input_data.signal, GL_STATIC_DRAW);
     
-    /* Set up vertex buffer objects */
-    GLuint vbo[num_channels];
-    glGenBuffers(num_channels, vbo);
+    //glViewport(0,0,640,480);
+    
+    // Set up vertex array object for each channel
+    GLuint VAO[num_channels];
+    glGenVertexArraysOES(num_channels, VAO );
+    
     for (int channel=0; channel<num_channels; channel++) {
-        glBindBuffer(GL_ARRAY_BUFFER, vbo[channel]);
-        glBufferData(GL_ARRAY_BUFFER, num_samples*sizeof(GLfloat), input_data.signal+channel*num_samples, GL_STATIC_DRAW);
+        
+        glBindVertexArrayOES( VAO[channel] );
+        //glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glEnableVertexAttribArray(ampAttrib);
+        glVertexAttribPointer(ampAttrib, 1, GL_FLOAT, GL_FALSE, num_channels*sizeof(float), (void*) (channel * sizeof(float)) );        
     }
-    glEnableVertexAttribArray(posAttrib);
     
     // Check for GL errors
     glPrintErrors();
@@ -102,12 +108,10 @@ int main(int argc, char** argv) {
         
         // Render each channel
         for (int channel=0; channel<num_channels; channel++){
-        
-            glBindBuffer(GL_ARRAY_BUFFER, vbo[channel]);
-            glVertexAttribPointer(posAttrib, 1, GL_FLOAT, GL_FALSE, 0, 0);
+            glBindVertexArrayOES( VAO[channel] );
             glDrawArrays(GL_LINE_STRIP, 0, num_samples);
         }
-                
+        
         SDL_GL_SwapWindow(wnd);
     };
 
