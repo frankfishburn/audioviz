@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
     
     // Setup shaders
     GLuint shaderProgram = setup_shaders_source(vertex_source, fragment_source);
-    GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
+    GLint ampAttrib = glGetAttribLocation(shaderProgram, "amplitude");
     
     GLint timeUniform = glGetUniformLocation(shaderProgram, "current_time");
     GLint fsUniform = glGetUniformLocation(shaderProgram, "sample_rate");

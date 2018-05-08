@@ -1,6 +1,6 @@
 R"(#version 130
 
-attribute float position;
+attribute float amplitude;
 uniform float sample_rate;
 uniform float current_time;
 uniform float window_duration;
@@ -13,6 +13,6 @@ void main(void){
     // Center on current time and scale to time window
     float xPos = (xTime - current_time) / window_duration;
 
-    gl_Position = vec4(xPos, position, 1.0, 1.0);
+    gl_Position = vec4(xPos, amplitude, 1.0, 1.0);
 
 })"
