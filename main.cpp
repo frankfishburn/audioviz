@@ -82,6 +82,8 @@ int main(int argc, char** argv) {
         
     }
     
+    SDL_GL_SetSwapInterval(1);
+    
     // Check for GL errors
     glPrintErrors();
     
