@@ -13,6 +13,11 @@ audio_manager::audio_manager(const audio_manager& orig) {
 }
 
 audio_manager::~audio_manager() {
+    if (isLoaded) {
+        free(data);
+        isLoaded=false;
+        isPlayable=false;
+    }
 }
 
 void audio_manager::load_file(const char *filename) {
