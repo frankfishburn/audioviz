@@ -6,10 +6,10 @@
 #include <iostream>
 #include <memory>
 
+#include "audio_manager.h"
+
 #include "opengl.h"
-#include "audio_playback.h"
 #include "shaders.h"
-#include "load_audio.h"
 
 const char *vertex_source = 
 #include "shaders/vert_direct.glsl"
@@ -31,17 +31,18 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
     
-    // Load audio data
-    audio_data input_data;
-    load_audio( argv[1] , &input_data );
+    // Load audio and setup playback
+    audio_manager audio(argv[1]);
+   
+    if (!audio.is_playable()) {
+        fprintf(stderr,"Audio problem, bailing out!\n");
+        return 1;
+    }
     
-    const unsigned int sample_rate = input_data.sample_rate;
-    const unsigned int num_samples = input_data.num_samples;
-    const unsigned int num_channels = input_data.num_channels;
+    const int sample_rate = audio.get_sample_rate();
+    const int num_samples = audio.get_num_samples();
+    const int num_channels = audio.get_num_channels();
     
-    // Setup audio playback
-    audio_playback(&input_data);
-
     // Initialize window and context
     SDL_Window* wnd = init_GL();
     
@@ -64,7 +65,7 @@ int main(int argc, char** argv) {
     GLuint vbo;
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, num_channels*num_samples*sizeof(GLfloat), input_data.signal, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, num_channels*num_samples*sizeof(GLfloat), audio.get_data_ptr(), GL_STATIC_DRAW);
     
     //glViewport(0,0,640,480);
     
@@ -90,7 +91,7 @@ int main(int argc, char** argv) {
     glUniform1f(timeUniform,0);
     
     // Start audio
-    SDL_PauseAudio(0);
+    audio.play();
     
     // Render Loop
     loop = [&]
