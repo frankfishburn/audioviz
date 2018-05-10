@@ -95,6 +95,8 @@ int main(int argc, char** argv) {
     // Start audio
     audio.play();
     
+    unsigned long count = 0;
+    
     // Render Loop
     loop = [&]
     {
@@ -127,6 +129,13 @@ int main(int argc, char** argv) {
         }
         
         SDL_GL_SwapWindow(wnd);
+        
+        count++;
+        
+        if (count%30==0) {
+            printf("%lu frames, %f seconds, %f fps\n",count,current_time,count/current_time);
+        }
+        
     };
 
     while(true) main_loop();
