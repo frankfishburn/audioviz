@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
     GLint rgbUniform = glGetUniformLocation(shaderProgram, "RGB");
     
     // Add x-scaling factor based on time window
-    float window_duration = .025;
+    float window_duration = .05;
     GLint windurUniform = glGetUniformLocation(shaderProgram, "window_duration");
     glUniform1f( windurUniform, window_duration );
     
@@ -132,7 +132,11 @@ int main(int argc, char** argv) {
         current_time = (SDL_GetPerformanceCounter() - time_start) / (float) SDL_GetPerformanceFrequency();
         glUniform1f(timeUniform,current_time);
         
-        // Render each channel
+        // Update VBO indices to render
+        int start_index = max( 0 , int ((current_time - window_duration/2) * sample_rate) );
+        int end_index = min( int ((current_time + window_duration/2) * sample_rate) , num_samples );
+        
+        // Render each chann0el
         for (int channel=0; channel<num_channels; channel++){
             
             glBindVertexArrayOES( VAO[channel] );
@@ -143,7 +147,7 @@ int main(int argc, char** argv) {
                 glUniform3f(rgbUniform, 0.0f, 0.0f, 1.0f);
             }
             
-            glDrawArrays(GL_LINE_STRIP, 0, num_samples);
+            glDrawArrays(GL_LINE_STRIP, start_index, end_index-start_index );
         }
         
         SDL_GL_SwapWindow(wnd);

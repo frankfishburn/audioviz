@@ -11,7 +11,7 @@ void main(void){
     float xTime = gl_VertexID / sample_rate;
 
     // Center on current time and scale to time window
-    float xPos = (xTime - current_time) / window_duration;
+    float xPos = (xTime - current_time) / (window_duration/2);
 
     gl_Position = vec4(xPos, amplitude, 1.0, 1.0);
 
