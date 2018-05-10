@@ -82,7 +82,14 @@ int main(int argc, char** argv) {
         
     }
     
+    // Enable v-sync
     SDL_GL_SetSwapInterval(1);
+    
+    // Disable depth, enable alpha blending
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE);
+    glDepthMask(false);
     
     // Check for GL errors
     glPrintErrors();
