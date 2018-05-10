@@ -101,11 +101,29 @@ int main(int argc, char** argv) {
     loop = [&]
     {
         SDL_Event e;
-        while(SDL_PollEvent(&e))
-        {
-            if(e.type == SDL_QUIT) std::abort();
-        }
         
+        while(SDL_PollEvent(&e)) {
+            switch(e.type) {
+                case SDL_QUIT:
+                    std::abort();
+                    break;
+                    
+                case SDL_WINDOWEVENT:
+                    if(e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+                        glViewport(0, 0, e.window.data1, e.window.data2);
+                        break;
+                    }
+                /*   
+                case SDL_KEYDOWN:
+                    switch (e.key.keysym.sym)
+                    {
+                        case SDLK_KP_SPACE: toggle_playback(); break;
+                    }
+                    break;
+                 */
+            }
+        }
+
         // Clear the screen to black
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
