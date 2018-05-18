@@ -14,7 +14,6 @@
 const char *vertex_source = 
 #include "shaders/vert_direct.glsl"
 ;
-
 const char *fragment_source = 
 #include "shaders/frag_plain.glsl"
 ;
@@ -77,6 +76,10 @@ int main(int argc, char** argv) {
         
     }
     
+    // Create a framebuffer
+    GLuint offscreenBuffer, screenTexture, screenVAO, screenShaderProgram ;
+    setup_framebuffer( &offscreenBuffer , &screenTexture , &screenVAO , &screenShaderProgram );
+    
     // Enable v-sync
     SDL_GL_SetSwapInterval(1);
     
@@ -126,10 +129,15 @@ int main(int argc, char** argv) {
             }
         }
 
+        // Bind framebuffer render target
+        glBindFramebuffer(GL_FRAMEBUFFER, offscreenBuffer);
+        glViewport(0, 0, 640, 480);
+        
         // Clear the screen to black
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-
+        glUseProgram(shaderProgram);
+        
         // Update current time
         current_time = (SDL_GetPerformanceCounter() - time_start) / (float) SDL_GetPerformanceFrequency();
         glUniform1f(timeUniform,current_time);
@@ -151,6 +159,16 @@ int main(int argc, char** argv) {
             
             glDrawArrays(GL_LINE_STRIP, start_index, end_index-start_index );
         }
+        
+        // Render offscreen buffer to screen
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glUseProgram(screenShaderProgram);
+        glBindVertexArrayOES(screenVAO);
+        glDisable(GL_DEPTH_TEST);
+        glBindTexture(GL_TEXTURE_2D, screenTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
         
         SDL_GL_SwapWindow(wnd);
         
