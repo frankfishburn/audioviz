@@ -49,25 +49,21 @@ int main(int argc, char** argv) {
     // Setup shaders
     GLuint shaderProgram = setup_shaders_source(vertex_source, fragment_source);
     GLint ampAttrib = glGetAttribLocation(shaderProgram, "amplitude");
-    
     GLint timeUniform = glGetUniformLocation(shaderProgram, "current_time");
-    GLint fsUniform = glGetUniformLocation(shaderProgram, "sample_rate");
-    glUniform1f(fsUniform, sample_rate);
-    
     GLint rgbUniform = glGetUniformLocation(shaderProgram, "RGB");
     
-    // Add x-scaling factor based on time window
-    float window_duration = .05;
+    // Set static uniforms
     GLint windurUniform = glGetUniformLocation(shaderProgram, "window_duration");
+    GLint fsUniform = glGetUniformLocation(shaderProgram, "sample_rate");
+    float window_duration = .05;
     glUniform1f( windurUniform, window_duration );
+    glUniform1f(fsUniform, sample_rate);
     
     // Set up vertex buffer object for interleaved audio data
     GLuint vbo;
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, num_channels*num_samples*sizeof(GLfloat), audio.get_data_ptr(), GL_STATIC_DRAW);
-    
-    //glViewport(0,0,640,480);
     
     // Set up vertex array object for each channel
     GLuint VAO[num_channels];
@@ -76,7 +72,6 @@ int main(int argc, char** argv) {
     for (int channel=0; channel<num_channels; channel++) {
         
         glBindVertexArrayOES( VAO[channel] );
-        //glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glEnableVertexAttribArray(ampAttrib);
         glVertexAttribPointer(ampAttrib, 1, GL_FLOAT, GL_FALSE, num_channels*sizeof(float), (void*) (channel * sizeof(float)) );
         
@@ -143,7 +138,7 @@ int main(int argc, char** argv) {
         int start_index = max( 0 , int ((current_time - window_duration/2) * sample_rate) );
         int end_index = min( int ((current_time + window_duration/2) * sample_rate) , num_samples );
         
-        // Render each chann0el
+        // Render each channel
         for (int channel=0; channel<num_channels; channel++){
             
             glBindVertexArrayOES( VAO[channel] );
@@ -159,8 +154,8 @@ int main(int argc, char** argv) {
         
         SDL_GL_SwapWindow(wnd);
         
+        // Display framerate info
         count++;
-        
         if (count%30==0) {
             printf("%lu frames, %f seconds, %f fps\n",count,current_time,count/current_time);
         }

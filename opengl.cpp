@@ -9,6 +9,7 @@ void glPrintErrors(){
     return;
 }
 
+// Initialize window and opengl context
 SDL_Window* init_GL() {
     SDL_Window* wnd(
         SDL_CreateWindow("audioviz", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
