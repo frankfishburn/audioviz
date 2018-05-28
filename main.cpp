@@ -17,6 +17,12 @@ const char *vertex_source =
 const char *fragment_source = 
 #include "shaders/frag_plain.glsl"
 ;
+const char *vertex_tex_source = 
+#include "shaders/vert_tex.glsl"
+;
+const char *fragment_tex_source = 
+#include "shaders/frag_tex.glsl"
+;
 
 using namespace std;
 
@@ -58,6 +64,9 @@ int main(int argc, char** argv) {
     glUniform1f( windurUniform, window_duration );
     glUniform1f(fsUniform, sample_rate);
     
+    // Setup framebugger shaders
+    GLuint screenShaderProgram = setup_shaders_source(vertex_tex_source, fragment_tex_source);
+    
     // Set up vertex buffer object for interleaved audio data
     GLuint vbo;
     glGenBuffers(1, &vbo);
@@ -77,8 +86,8 @@ int main(int argc, char** argv) {
     }
     
     // Create a framebuffer
-    GLuint offscreenBuffer, screenTexture, screenVAO, screenShaderProgram ;
-    setup_framebuffer( &offscreenBuffer , &screenTexture , &screenVAO , &screenShaderProgram );
+    GLuint offscreenBuffer, screenTexture, screenVAO, screenVBO;
+    setup_framebuffer( wnd, &offscreenBuffer , &screenTexture , &screenVAO , &screenVBO );
     
     // Enable v-sync
     SDL_GL_SetSwapInterval(1);
@@ -115,7 +124,11 @@ int main(int argc, char** argv) {
                     
                 case SDL_WINDOWEVENT:
                     if(e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+                        destroy_framebuffer( &offscreenBuffer , &screenTexture , &screenVAO , &screenVBO );
+                        setup_framebuffer( wnd, &offscreenBuffer , &screenTexture , &screenVAO , &screenVBO );
+                        glBindFramebuffer(GL_FRAMEBUFFER, 0);
                         glViewport(0, 0, e.window.data1, e.window.data2);
+                        
                         break;
                     }
                 /*   
@@ -131,9 +144,6 @@ int main(int argc, char** argv) {
 
         // Bind framebuffer render target
         glBindFramebuffer(GL_FRAMEBUFFER, offscreenBuffer);
-        glViewport(0, 0, 640, 480);
-        
-        // Clear the screen to black
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         glUseProgram(shaderProgram);

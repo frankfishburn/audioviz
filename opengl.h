@@ -11,6 +11,7 @@
 void glPrintErrors();
 
 SDL_Window* init_GL();
-void setup_framebuffer( GLuint *framebuffer , GLuint *texture , GLuint *VAO , GLuint *shaderProgram );
+void setup_framebuffer( SDL_Window *wnd, GLuint *framebuffer , GLuint *texture , GLuint *VAO , GLuint *VBO );
+void destroy_framebuffer(GLuint *framebuffer , GLuint *texture , GLuint *VAO , GLuint *VBO );
 
 #endif /* OPENGL_H */

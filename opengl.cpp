@@ -1,13 +1,6 @@
 #include "opengl.h"
 #include "shaders.h"
 
-const char *vertex_tex_source = 
-#include "shaders/vert_tex.glsl"
-;
-const char *fragment_tex_source = 
-#include "shaders/frag_tex.glsl"
-;
-
 void glPrintErrors(){
     GLenum err;
     while((err = glGetError()) != GL_NO_ERROR)
@@ -45,17 +38,20 @@ SDL_Window* init_GL() {
 }
 
 // Create the offscreen framebuffer
-void setup_framebuffer( GLuint *framebuffer , GLuint *texture , GLuint *VAO , GLuint *shaderProgram ) {
+void setup_framebuffer(SDL_Window *wnd, GLuint *framebuffer , GLuint *texture , GLuint *VAO , GLuint *VBO) {
     
     // Create a framebuffer
     glGenFramebuffers(1, framebuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, *framebuffer);
     
-    // create the texture
-    //GLuint texture;
+    // Get window size
+    int width, height;
+    SDL_GetWindowSize(wnd, &width, &height);
+    
+    // Create the texture
     glGenTextures(1, texture);
     glBindTexture(GL_TEXTURE_2D, *texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,  640, 480, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,  width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, *texture, 0);
@@ -82,17 +78,23 @@ void setup_framebuffer( GLuint *framebuffer , GLuint *texture , GLuint *VAO , GL
     };
     
     // screen quad VAO
-    unsigned int VBO;
     glGenVertexArrays(1, VAO);
-    glGenBuffers(1, &VBO);
+    glGenBuffers(1, VBO);
     glBindVertexArray(*VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, *VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(screenVertices), &screenVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
     
-    *shaderProgram = setup_shaders_source(vertex_tex_source, fragment_tex_source);
+}
+
+void destroy_framebuffer(GLuint *framebuffer , GLuint *texture , GLuint *VAO , GLuint *VBO ) {
+ 
+    glDeleteBuffers(1, VBO);
+    glDeleteVertexArrays(1, VAO);
+    glDeleteTextures(1, texture);
+    glDeleteFramebuffers(1, framebuffer);
     
 }
