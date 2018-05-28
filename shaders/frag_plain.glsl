@@ -1,4 +1,4 @@
-R"(#version 130
+R"(#version 320 es
 precision mediump float;
 uniform vec3 RGB;
 out vec4 FragColor;

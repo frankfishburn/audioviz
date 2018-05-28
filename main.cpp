@@ -66,11 +66,11 @@ int main(int argc, char** argv) {
     
     // Set up vertex array object for each channel
     GLuint VAO[num_channels];
-    glGenVertexArraysOES(num_channels, VAO );
+    glGenVertexArrays(num_channels, VAO );
     
     for (int channel=0; channel<num_channels; channel++) {
         
-        glBindVertexArrayOES( VAO[channel] );
+        glBindVertexArray( VAO[channel] );
         glEnableVertexAttribArray(ampAttrib);
         glVertexAttribPointer(ampAttrib, 1, GL_FLOAT, GL_FALSE, num_channels*sizeof(float), (void*) (channel * sizeof(float)) );
         
@@ -149,7 +149,7 @@ int main(int argc, char** argv) {
         // Render each channel
         for (int channel=0; channel<num_channels; channel++){
             
-            glBindVertexArrayOES( VAO[channel] );
+            glBindVertexArray( VAO[channel] );
             
             if (channel==0){
                 glUniform3f(rgbUniform, 1.0f, 0.0f, 0.0f);
@@ -165,7 +165,7 @@ int main(int argc, char** argv) {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         glUseProgram(screenShaderProgram);
-        glBindVertexArrayOES(screenVAO);
+        glBindVertexArray(screenVAO);
         glDisable(GL_DEPTH_TEST);
         glBindTexture(GL_TEXTURE_2D, screenTexture);
         glDrawArrays(GL_TRIANGLES, 0, 6);

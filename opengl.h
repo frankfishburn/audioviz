@@ -5,7 +5,7 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 
-#define GL_GLEXT_PROTOTYPES 1
+#include <GLES3/gl3.h>
 #include <SDL2/SDL_opengles2.h>
 
 void glPrintErrors();

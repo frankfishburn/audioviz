@@ -1,7 +1,6 @@
-R"(#version 330 core
+R"(#version 320 es
 layout (location = 0) in vec2 aPos;
 layout (location = 1) in vec2 aTexCoords;
-
 out vec2 TexCoords;
 
 void main()
