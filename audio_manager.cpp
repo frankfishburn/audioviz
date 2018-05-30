@@ -64,18 +64,6 @@ void audio_manager::load_file(const char *filename) {
 
 }
 
-void audio_manager::callback(void *userdata, Uint8 *stream, int len) {
-    
-    SDL_memset(stream, 0, len);
-    
-    Uint8** audio_ptr = (Uint8**) userdata;
-    
-    SDL_MixAudioFormat( stream, (Uint8*) *audio_ptr, AUDIO_F32, len, SDL_MIX_MAXVOLUME / 2);
-    
-    *audio_ptr += len;
-    
-}
-
 void audio_manager::setup_playback() {
 
     SDL_AudioSpec want, have;
@@ -86,7 +74,7 @@ void audio_manager::setup_playback() {
     want.channels = this->num_channels;
     want.samples = 8192;
     want.callback = callback;
-    want.userdata = (void*) &this->data;
+    want.userdata = (void*) this;
     
     if (SDL_OpenAudio(&want, &have) < 0) {
         SDL_Log("Failed to open audio: %s", SDL_GetError());
@@ -99,6 +87,16 @@ void audio_manager::setup_playback() {
     }
     
     this->isPlayable = true;
+    
+}
+
+void audio_manager::callback(void *userdata, Uint8 *stream, int len) {
+    
+    SDL_memset(stream, 0, len);
+    audio_manager *am = (audio_manager*) userdata;
+    Uint8** audio_ptr = (Uint8**) &(am->data);
+    SDL_MixAudioFormat( stream, (Uint8*) *audio_ptr + am->callback_offset , AUDIO_F32, len, SDL_MIX_MAXVOLUME / 2);
+    am->callback_offset += len;
     
 }
 
@@ -159,4 +157,46 @@ void audio_manager::toggle_playback() {
     } else {
         play();
     }
+}
+
+void audio_manager::back() {
+    
+    pause();
+    
+    Uint64 delta_sample = 15 * sample_rate;
+    Uint64 current_sample = get_current_sample();
+    Uint64 new_sample;
+    
+    if (delta_sample > current_sample) {
+        new_sample = 0;
+    } else {
+        new_sample = current_sample - delta_sample;
+    }
+    
+    timer_offset = new_sample * SDL_GetPerformanceFrequency() / sample_rate;
+    callback_offset = new_sample * 8;
+    
+    play();
+    
+}
+
+void audio_manager::forward() {
+    
+    pause();
+    
+    Uint64 delta_sample = 15 * sample_rate;
+    Uint64 current_sample = get_current_sample();
+    Uint64 new_sample;
+    
+    if ((current_sample + delta_sample) > num_samples) {
+        new_sample = num_samples-sample_rate;
+    } else {
+        new_sample = current_sample + delta_sample;
+    }
+    
+    timer_offset = new_sample * SDL_GetPerformanceFrequency() / sample_rate;
+    callback_offset = new_sample * 8;
+    
+    play();
+    
 }

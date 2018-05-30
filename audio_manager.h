@@ -19,6 +19,8 @@ public:
     void play();
     void pause();
     void toggle_playback();
+    void back();
+    void forward();
     
     bool is_loaded() {return isLoaded;};
     bool is_playable() {return isPlayable;};
@@ -39,6 +41,7 @@ private:
     
     Uint64 timer_start = 0;
     Uint64 timer_offset = 0;
+    Uint64 callback_offset = 0;
     
     std::string filename;
     Uint64 num_channels = 0;

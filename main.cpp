@@ -123,18 +123,19 @@ int main(int argc, char** argv) {
                     
                 case SDL_WINDOWEVENT:
                     if(e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+                        
                         destroy_framebuffer( &offscreenBuffer , &screenTexture , &screenVAO , &screenVBO );
                         setup_framebuffer( wnd, &offscreenBuffer , &screenTexture , &screenVAO , &screenVBO );
                         glBindFramebuffer(GL_FRAMEBUFFER, 0);
                         glViewport(0, 0, e.window.data1, e.window.data2);
-                        
                         break;
                     }
                 
                 case SDL_KEYDOWN:
-                    switch (e.key.keysym.sym)
-                    {
+                    switch (e.key.keysym.sym) {
                         case SDLK_SPACE: audio.toggle_playback(); break;
+                        case SDLK_LEFT: audio.back(); break;
+                        case SDLK_RIGHT: audio.forward(); break;
                     }
                     break;
                  
