@@ -1,16 +1,16 @@
 #include "audio_manager.h"
 #include <algorithm> // min, max
 
-audio_manager::audio_manager() {
-
-}
-
 audio_manager::audio_manager(const char *filename) {
-    load_file(filename);
+
+    input_file = std::string(filename);;
+    load_file();
     setup_playback();
+
 }
 
 audio_manager::audio_manager(const audio_manager& orig) {
+
 }
 
 audio_manager::~audio_manager() {
@@ -23,14 +23,15 @@ audio_manager::~audio_manager() {
     
 }
 
-void audio_manager::load_file(const char *filename) {
+void audio_manager::load_file() {
 
+    const char* filename = input_file.c_str();
     char strbuffer[BUFFER_LEN];
     double audiodata[BUFFER_LEN];
     SNDFILE *file;
     SF_INFO sfinfo;
 
-    memset (&sfinfo, 0, sizeof(sfinfo));
+    memset(&sfinfo, 0, sizeof(sfinfo));
 
     file = sf_open(filename, SFM_READ, &sfinfo);
     
@@ -65,9 +66,8 @@ void audio_manager::load_file(const char *filename) {
 }
 
 void audio_manager::setup_playback() {
-
-    SDL_AudioSpec want, have;
     
+    SDL_AudioSpec want, have;
     SDL_memset(&want, 0, sizeof(want));
     want.freq = this->sample_rate;
     want.format = AUDIO_F32;
