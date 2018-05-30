@@ -182,9 +182,11 @@ int main(int argc, char** argv) {
         SDL_GL_SwapWindow(wnd);
         
         // Display framerate info
-        count++;
-        if (count%30==0) {
-            printf("%lu frames, %f seconds, %f fps\n",count,current_time,count/current_time);
+        if (audio.is_playing()) {
+            count++;
+            if (count%30==0) {
+                printf("%lu frames, %f seconds, %f fps\n",count,current_time,count/current_time);
+            }
         }
         
     };
