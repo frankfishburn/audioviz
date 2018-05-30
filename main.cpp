@@ -130,14 +130,14 @@ int main(int argc, char** argv) {
                         
                         break;
                     }
-                /*   
+                
                 case SDL_KEYDOWN:
                     switch (e.key.keysym.sym)
                     {
-                        case SDLK_KP_SPACE: toggle_playback(); break;
+                        case SDLK_SPACE: audio.toggle_playback(); break;
                     }
                     break;
-                 */
+                 
             }
         }
 
