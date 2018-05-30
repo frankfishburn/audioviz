@@ -102,8 +102,7 @@ int main(int argc, char** argv) {
     glPrintErrors();
     
     // Setup timer
-    Uint64 time_start = SDL_GetPerformanceCounter();
-    float current_time;
+    double current_time;
     glUniform1f(timeUniform,0);
     
     // Start audio
@@ -149,7 +148,7 @@ int main(int argc, char** argv) {
         glUseProgram(shaderProgram);
         
         // Update current time
-        current_time = (SDL_GetPerformanceCounter() - time_start) / (float) SDL_GetPerformanceFrequency();
+        current_time = audio.get_current_time();
         glUniform1f(timeUniform,current_time);
         
         // Update VBO indices to render

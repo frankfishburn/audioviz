@@ -16,29 +16,41 @@ public:
     audio_manager(const audio_manager& orig);
     virtual ~audio_manager();
     
-    void load_file(const char *filename);
-    void setup_playback();
     void play();
     void pause();
+    void toggle_playback();
     
     bool is_loaded() {return isLoaded;};
     bool is_playable() {return isPlayable;};
-    int get_num_channels() {return num_channels;};
-    long get_num_samples() {return num_samples;};
-    long get_sample_rate() {return sample_rate;};
+    bool is_playing() {return isPlaying;};
+    Uint64 get_num_channels() {return num_channels;};
+    Uint64 get_num_samples() {return num_samples;};
+    Uint64 get_sample_rate() {return sample_rate;};
+    Uint64 get_current_sample();
+    double get_current_time();
     float* get_data_ptr() {return data;};
     
 private:
     bool isLoaded = false;
     bool isPlayable = false;
+    bool isPlaying = false;
     
-    int num_channels = 0;
-    int num_samples = 0;
-    int sample_rate = 0;
-    float *data;
+    double current_time = 0.0;
+    
+    Uint64 timer_start = 0;
+    Uint64 timer_offset = 0;
+    
     std::string filename;
+    Uint64 num_channels = 0;
+    Uint64 num_samples = 0;
+    Uint64 sample_rate = 0;
+    float *data = NULL;
+    
+    void load_file();
+    void setup_playback();
     
     static void callback(void *userdata, Uint8 *stream, int len);
+    void update_offset();
     
 };
 

@@ -1,4 +1,5 @@
 #include "audio_manager.h"
+#include <algorithm> // min, max
 
 audio_manager::audio_manager() {
 
@@ -13,11 +14,13 @@ audio_manager::audio_manager(const audio_manager& orig) {
 }
 
 audio_manager::~audio_manager() {
+    
     if (isLoaded) {
         free(data);
         isLoaded=false;
         isPlayable=false;
     }
+    
 }
 
 void audio_manager::load_file(const char *filename) {
@@ -87,9 +90,11 @@ void audio_manager::setup_playback() {
     
     if (SDL_OpenAudio(&want, &have) < 0) {
         SDL_Log("Failed to open audio: %s", SDL_GetError());
+        return;
     } else {
         if (have.format != want.format) {
             SDL_Log("We didn't get Float32 audio format.");
+            return;
         }
     }
     
@@ -97,10 +102,61 @@ void audio_manager::setup_playback() {
     
 }
 
+void audio_manager::update_offset() {
+    
+    if (isPlaying) {
+        Uint64 now = SDL_GetPerformanceCounter();
+        timer_offset += (now - timer_start);
+        timer_start = 0;
+    }
+    
+}
+
+Uint64 audio_manager::get_current_sample() {
+    
+    Uint64 current_sample = (Uint64) round( get_current_time() * (double) sample_rate );
+    current_sample = std::min( num_samples , current_sample );
+    current_sample = std::max( (Uint64) 1 , current_sample );
+    return current_sample;
+    
+}
+
+double audio_manager::get_current_time() {
+    
+    Uint64 position = timer_offset;
+    
+    if (isPlaying) {
+        Uint64 now = SDL_GetPerformanceCounter();
+        position += (now - timer_start);
+    }
+    
+    return position / (double) SDL_GetPerformanceFrequency();
+    
+}
+
 void audio_manager::play() {
-    SDL_PauseAudio(0);
+    
+    if (!isPlaying) {
+        timer_start = SDL_GetPerformanceCounter();
+        SDL_PauseAudio(0);
+        isPlaying = true;
+    }    
 }
 
 void audio_manager::pause() {
-    SDL_PauseAudio(1);
+    
+    if (isPlaying) {
+        update_offset();
+        SDL_PauseAudio(1);
+        isPlaying = false;
+    }
+}
+
+void audio_manager::toggle_playback() {
+
+    if (isPlaying) {
+        pause();
+    } else {
+        play();
+    }
 }
