@@ -56,6 +56,7 @@ int main(int argc, char** argv) {
     GLuint shaderProgram;
     status = setup_shaders_source(shaderProgram, vertex_source, fragment_source);
     if (status!=0) { return 1; }
+    
     GLint ampAttrib = glGetAttribLocation(shaderProgram, "amplitude");
     GLint timeUniform = glGetUniformLocation(shaderProgram, "current_time");
     GLint rgbUniform = glGetUniformLocation(shaderProgram, "RGB");
@@ -92,7 +93,8 @@ int main(int argc, char** argv) {
     
     // Create a framebuffer
     GLuint offscreenBuffer, screenTexture, screenVAO, screenVBO;
-    setup_framebuffer( wnd, &offscreenBuffer , &screenTexture , &screenVAO , &screenVBO );
+    status = setup_framebuffer( wnd, &offscreenBuffer , &screenTexture , &screenVAO , &screenVBO );
+    if (status!=0) { return 1; }
     
     // Enable v-sync
     SDL_GL_SetSwapInterval(1);

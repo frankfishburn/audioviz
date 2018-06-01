@@ -38,7 +38,7 @@ SDL_Window* init_GL() {
 }
 
 // Create the offscreen framebuffer
-void setup_framebuffer(SDL_Window *wnd, GLuint *framebuffer , GLuint *texture , GLuint *VAO , GLuint *VBO) {
+int setup_framebuffer(SDL_Window *wnd, GLuint *framebuffer , GLuint *texture , GLuint *VAO , GLuint *VBO) {
     
     // Create a framebuffer
     glGenFramebuffers(1, framebuffer);
@@ -60,6 +60,7 @@ void setup_framebuffer(SDL_Window *wnd, GLuint *framebuffer , GLuint *texture , 
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER) ;
     if(status != GL_FRAMEBUFFER_COMPLETE) {
         fprintf(stderr,"GL framebuffer Error! %u\n",status);
+        return 1;
     }
     
     // Reset buffers
@@ -87,6 +88,8 @@ void setup_framebuffer(SDL_Window *wnd, GLuint *framebuffer , GLuint *texture , 
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    
+    return 0;
     
 }
 
