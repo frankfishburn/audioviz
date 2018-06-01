@@ -52,7 +52,10 @@ int main(int argc, char** argv) {
     SDL_Window* wnd = init_GL();
     
     // Setup shaders
-    GLuint shaderProgram = setup_shaders_source(vertex_source, fragment_source);
+    int status;
+    GLuint shaderProgram;
+    status = setup_shaders_source(shaderProgram, vertex_source, fragment_source);
+    if (status!=0) { return 1; }
     GLint ampAttrib = glGetAttribLocation(shaderProgram, "amplitude");
     GLint timeUniform = glGetUniformLocation(shaderProgram, "current_time");
     GLint rgbUniform = glGetUniformLocation(shaderProgram, "RGB");
@@ -65,7 +68,9 @@ int main(int argc, char** argv) {
     glUniform1f(fsUniform, sample_rate);
     
     // Setup framebugger shaders
-    GLuint screenShaderProgram = setup_shaders_source(vertex_tex_source, fragment_tex_source);
+    GLuint screenShaderProgram;
+    status = setup_shaders_source(screenShaderProgram, vertex_tex_source, fragment_tex_source);
+    if (status!=0) { return 1; }
     
     // Set up vertex buffer object for interleaved audio data
     GLuint vbo;

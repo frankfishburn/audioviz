@@ -90,31 +90,34 @@ GLuint link_shaders(GLuint *vertexShader, GLuint *fragmentShader) {
     
 }
 
-GLuint setup_shaders_source(const char* vs_source, const char* fs_source) {
+int setup_shaders_source(GLuint &shaderProgram, const char* vs_source, const char* fs_source) {
     
     // Compile shaders
     GLuint vertexShader = compile_shader(vs_source,GL_VERTEX_SHADER);
     GLuint fragmentShader = compile_shader(fs_source,GL_FRAGMENT_SHADER);
     
     // Link shader program
-    GLuint shaderProgram = link_shaders(&vertexShader, &fragmentShader);
+    shaderProgram = link_shaders(&vertexShader, &fragmentShader);
     
     // Use shader program
     glUseProgram(shaderProgram);
     
     // Check for errors
+    int status = 0;
     GLenum err;
-    while((err = glGetError()) != GL_NO_ERROR)
+    while((err = glGetError()) != GL_NO_ERROR) {
         fprintf(stderr,"Program GL Error! %u\n",err);
+        status = 1;
+    }
     
-    return shaderProgram;
+    return status;
 }
 
-GLuint setup_shaders_filename(const char* vs_filename, const char* fs_filename) {
+int setup_shaders_filename(GLuint &shaderProgram, const char* vs_filename, const char* fs_filename) {
 
     // Load shader files
     std::string vertexSource = read_file(vs_filename);
     std::string fragmentSource = read_file(fs_filename);
     
-    return setup_shaders_source(vertexSource.c_str(), fragmentSource.c_str());
+    return setup_shaders_source(shaderProgram, vertexSource.c_str(), fragmentSource.c_str());
 }
