@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
     GLuint vbo;
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, num_channels*num_samples*sizeof(GLfloat), audio.get_data_ptr(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, num_channels*num_samples*sizeof(GLfloat), audio.get_data(), GL_STATIC_DRAW);
     
     // Set up vertex array object for each channel
     GLuint VAO[num_channels];

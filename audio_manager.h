@@ -34,6 +34,7 @@ public:
     Uint64 get_num_channels() {return num_channels;};
     Uint64 get_num_samples() {return num_samples;};
     Uint64 get_sample_rate() {return sample_rate;};
+    float* get_data() {return data;};
     
 private:
     

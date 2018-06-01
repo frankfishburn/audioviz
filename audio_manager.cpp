@@ -11,12 +11,14 @@ audio_manager::audio_manager(const char *filename) {
 
 audio_manager::audio_manager(const audio_manager& orig) {
 
+    data = new float[orig.num_samples * orig.num_channels];
+    memcpy(data, orig.data, num_samples * num_channels * sizeof(float));
 }
 
 audio_manager::~audio_manager() {
     
     if (isLoaded) {
-        free(data);
+        delete[] data;
         isLoaded=false;
         isPlayable=false;
     }
@@ -48,12 +50,12 @@ void audio_manager::load_file() {
     }
 
     // Save parameters
-    num_channels = (long) sfinfo.channels;
-    sample_rate  = (long) sfinfo.samplerate;
-    num_samples  = sfinfo.frames;
+    num_channels = (Uint64) sfinfo.channels;
+    sample_rate  = (Uint64) sfinfo.samplerate;
+    num_samples  = (Uint64) sfinfo.frames;
     
     // Allocate audio data arrays
-    data = (float*) malloc( sizeof(float) * num_channels * num_samples );
+    data = new float[ num_channels * num_samples ];
 
     // Read audio data to buffer
     sf_readf_float(file, data , num_samples * num_channels );
@@ -61,17 +63,20 @@ void audio_manager::load_file() {
     // Close audio file
     sf_close(file);
     
-    this->isLoaded = true;
+    isLoaded = true;
 
 }
 
 void audio_manager::setup_playback() {
     
+    if (!isLoaded)
+        return;
+    
     SDL_AudioSpec want, have;
     SDL_memset(&want, 0, sizeof(want));
-    want.freq = this->sample_rate;
+    want.freq = sample_rate;
     want.format = AUDIO_F32;
-    want.channels = this->num_channels;
+    want.channels = num_channels;
     want.samples = 8192;
     want.callback = callback;
     want.userdata = (void*) this;
@@ -86,7 +91,7 @@ void audio_manager::setup_playback() {
         }
     }
     
-    this->isPlayable = true;
+    isPlayable = true;
     
 }
 
