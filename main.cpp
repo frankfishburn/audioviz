@@ -58,15 +58,14 @@ int main(int argc, char** argv) {
     if (status!=0) { return 1; }
     
     GLint ampAttrib = glGetAttribLocation(shaderProgram, "amplitude");
-    GLint timeUniform = glGetUniformLocation(shaderProgram, "current_time");
+    GLint centerUniform = glGetUniformLocation(shaderProgram, "center_vertex");
+    GLint numUniform = glGetUniformLocation(shaderProgram, "num_vertices");
     GLint rgbUniform = glGetUniformLocation(shaderProgram, "RGB");
     
     // Set static uniforms
-    GLint windurUniform = glGetUniformLocation(shaderProgram, "window_duration");
-    GLint fsUniform = glGetUniformLocation(shaderProgram, "sample_rate");
     float window_duration = .05;
-    glUniform1f( windurUniform, window_duration );
-    glUniform1f(fsUniform, sample_rate);
+    int vertices_per_frame = (int) (window_duration * sample_rate);
+    glUniform1i(numUniform, vertices_per_frame);
     
     // Setup framebugger shaders
     GLuint screenShaderProgram;
@@ -107,10 +106,6 @@ int main(int argc, char** argv) {
     
     // Check for GL errors
     glPrintErrors();
-    
-    // Setup timer
-    double current_time;
-    glUniform1f(timeUniform,0);
     
     // Start audio
     audio.play();
@@ -156,12 +151,12 @@ int main(int argc, char** argv) {
         glUseProgram(shaderProgram);
         
         // Update current time
-        current_time = audio.get_current_time();
-        glUniform1f(timeUniform,current_time);
+        int current_vertex = (int) (audio.get_current_time() * sample_rate);
+        glUniform1i(centerUniform, current_vertex);
         
-        // Update VBO indices to render
-        int start_index = max( 0 , int ((current_time - window_duration/2) * sample_rate) );
-        int end_index = min( int ((current_time + window_duration/2) * sample_rate) , num_samples );
+        // Get range of vertices to draw
+        int start_index = max( 0 , current_vertex - vertices_per_frame/2);
+        int end_index = min( current_vertex + vertices_per_frame/2 , num_samples );
         
         // Render each channel
         for (int channel=0; channel<num_channels; channel++){
@@ -193,7 +188,8 @@ int main(int argc, char** argv) {
         if (audio.is_playing()) {
             count++;
             if (count%30==0) {
-                printf("%lu frames, %f seconds, %f fps\n",count,current_time,count/current_time);
+                float current_time = ((float) current_vertex) / ((float) sample_rate);
+                printf("%lu frames, %f seconds, %f fps, range: %i-%i\n",count,current_time,count/current_time,start_index,end_index);
             }
         }
         
