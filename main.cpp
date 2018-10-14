@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
     int vertices_per_frame = (int) (window_duration * sample_rate);
     glUniform1i(numUniform, vertices_per_frame);
     
-    // Setup framebugger shaders
+    // Setup framebuffer shaders
     GLuint screenShaderProgram;
     status = setup_shaders_source(screenShaderProgram, vertex_tex_source, fragment_tex_source);
     if (status!=0) { return 1; }
@@ -130,8 +130,8 @@ int main(int argc, char** argv) {
                         setup_framebuffer( wnd, &offscreenBuffer , &screenTexture , &screenVAO , &screenVBO );
                         glBindFramebuffer(GL_FRAMEBUFFER, 0);
                         glViewport(0, 0, e.window.data1, e.window.data2);
-                        break;
                     }
+                    break;
                 
                 case SDL_KEYDOWN:
                     switch (e.key.keysym.sym) {
