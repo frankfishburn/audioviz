@@ -6,13 +6,15 @@
 #include <iostream>
 #include <memory>
 
+#include "spectrogram.h"
+
 #include "audio_manager.h"
 
 #include "opengl.h"
 #include "shaders.h"
 
 const char *vertex_source = 
-#include "shaders/vert_direct.glsl"
+#include "shaders/vert_direct_freq.glsl"
 ;
 const char *fragment_source = 
 #include "shaders/frag_plain.glsl"
@@ -47,6 +49,33 @@ int main(int argc, char** argv) {
     const int sample_rate = audio.get_sample_rate();
     const int num_samples = audio.get_num_samples();
     const int num_channels = audio.get_num_channels();
+        
+    // Create spectrogram object
+    InputProps props;
+    props.data_size = sizeof(float);
+    props.sample_rate = sample_rate;
+    props.num_samples = 4096;
+    props.stride = num_channels;
+    
+    StftConfig config;
+    config.padding_mode = TRUNCATE;
+    config.window_length = 512;
+    config.window_overlap = 256;
+    config.window_type = HAMMING;
+    
+    SpectrogramTransform *mySTFT = spectrogram_create( &props, &config );
+    
+    unsigned long freq_len = spectrogram_get_freqlen( mySTFT );
+    
+    // Allocate STFT frequency vector
+    float *freq = (float*) calloc(freq_len, sizeof(float));
+    spectrogram_get_freq(mySTFT, (void*) freq);
+    
+    // Allocate spectrogram power for each channel
+    float *power[num_channels];
+    for (int i=0; i<num_channels; i++) {
+        power[i] = (float*) calloc(freq_len, sizeof(float));  
+    }
     
     // Initialize window and context
     SDL_Window* wnd = init_GL();
@@ -58,35 +87,33 @@ int main(int argc, char** argv) {
     if (status!=0) { return 1; }
     
     GLint ampAttrib = glGetAttribLocation(shaderProgram, "amplitude");
-    GLint centerUniform = glGetUniformLocation(shaderProgram, "center_vertex");
-    GLint numUniform = glGetUniformLocation(shaderProgram, "num_vertices");
+    GLint numUniform = glGetUniformLocation(shaderProgram, "num_freq");
+    GLint nyquistUniform = glGetUniformLocation(shaderProgram, "nyquist_freq");
     GLint rgbUniform = glGetUniformLocation(shaderProgram, "RGB");
     
     // Set static uniforms
-    float window_duration = .05;
-    int vertices_per_frame = (int) (window_duration * sample_rate);
-    glUniform1i(numUniform, vertices_per_frame);
+    glUniform1i(numUniform, freq_len);
+    glUniform1f(nyquistUniform, freq[freq_len-1]);
     
     // Setup framebuffer shaders
     GLuint screenShaderProgram;
     status = setup_shaders_source(screenShaderProgram, vertex_tex_source, fragment_tex_source);
     if (status!=0) { return 1; }
     
-    // Set up vertex buffer object for interleaved audio data
-    GLuint vbo;
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, num_channels*num_samples*sizeof(GLfloat), audio.get_data(), GL_STATIC_DRAW);
-    
-    // Set up vertex array object for each channel
+    // Set up vertex buffer/array object for each channel
+    GLuint VBO[num_channels];
     GLuint VAO[num_channels];
     glGenVertexArrays(num_channels, VAO );
     
     for (int channel=0; channel<num_channels; channel++) {
         
+        glGenBuffers(1, &VBO[channel]);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO[channel]);
+        glBufferData(GL_ARRAY_BUFFER, freq_len * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
+        
         glBindVertexArray( VAO[channel] );
         glEnableVertexAttribArray(ampAttrib);
-        glVertexAttribPointer(ampAttrib, 1, GL_FLOAT, GL_FALSE, num_channels*sizeof(float), (void*) (channel * sizeof(float)) );
+        glVertexAttribPointer(ampAttrib, 1, GL_FLOAT, GL_FALSE, sizeof(float), 0 );
         
     }
     
@@ -109,8 +136,6 @@ int main(int argc, char** argv) {
     
     // Start audio
     audio.play();
-    
-    unsigned long count = 0;
     
     // Render Loop
     loop = [&]
@@ -151,15 +176,19 @@ int main(int argc, char** argv) {
         glUseProgram(shaderProgram);
         
         // Update current time
-        int current_vertex = (int) (audio.get_current_time() * sample_rate);
-        glUniform1i(centerUniform, current_vertex);
-        
-        // Get range of vertices to draw
-        int start_index = max( 0 , current_vertex - vertices_per_frame/2);
-        int end_index = min( current_vertex + vertices_per_frame/2 , num_samples );
+        long current_sample = audio.get_current_sample();
+        long start_index = max( (long) 0 , current_sample - (long) props.num_samples/2 );
         
         // Render each channel
         for (int channel=0; channel<num_channels; channel++){
+        
+            // Compute STFT
+            spectrogram_execute(mySTFT, (void*) (audio.get_data() + num_channels * start_index + channel) );
+            spectrogram_get_power_periodogram(mySTFT, (void*) power[channel]);
+
+            // Update the buffer
+            glBindBuffer(GL_ARRAY_BUFFER, VBO[channel]);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, freq_len * sizeof(GLfloat), power[channel]);
             
             glBindVertexArray( VAO[channel] );
             
@@ -169,7 +198,7 @@ int main(int argc, char** argv) {
                 glUniform3f(rgbUniform, 0.0f, 0.0f, 1.0f);
             }
             
-            glDrawArrays(GL_LINE_STRIP, start_index, end_index-start_index );
+            glDrawArrays(GL_LINE_STRIP, 0, freq_len );
         }
         
         // Render offscreen buffer to screen
@@ -183,15 +212,6 @@ int main(int argc, char** argv) {
         glDrawArrays(GL_TRIANGLES, 0, 6);
         
         SDL_GL_SwapWindow(wnd);
-        
-        // Display framerate info
-        if (audio.is_playing()) {
-            count++;
-            if (count%30==0) {
-                float current_time = ((float) current_vertex) / ((float) sample_rate);
-                printf("%lu frames, %f seconds, %f fps, range: %i-%i\n",count,current_time,count/current_time,start_index,end_index);
-            }
-        }
         
     };
 

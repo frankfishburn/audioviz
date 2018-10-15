@@ -7,5 +7,10 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 include_directories("${PROJECT_BINARY_DIR}")
+
+find_path(SPECTROGRAM_INCLUDE_DIR spectrogram.h PATH_SUFFIXES include)
+find_library(SPECTROGRAM_LIB NAMES spectrogram PATH_SUFFIXES build/src)
+include_directories(${SPECTROGRAM_INCLUDE_DIR})
+
 add_executable(audioviz main.cpp audio_manager.cpp opengl.cpp shaders.cpp)
-target_link_libraries(audioviz GLESv2 SDL2 SDL2_image sndfile)
+target_link_libraries(audioviz GLESv2 SDL2 SDL2_image sndfile ${SPECTROGRAM_LIB})
