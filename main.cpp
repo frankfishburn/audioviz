@@ -77,6 +77,20 @@ int main(int argc, char** argv) {
         power[i] = (float*) calloc(freq_len, sizeof(float));  
     }
     
+    // Get maximum power at each frequency
+    float *maxpower = (float*) calloc(freq_len, sizeof(float));
+    for (int start_index=0; start_index<num_samples-props.num_samples; start_index+=1470) {
+        for (int channel=0; channel<num_channels; channel++) {
+            
+            spectrogram_execute(mySTFT, (void*) (audio.get_data() + num_channels * start_index + channel) );
+            spectrogram_get_power_periodogram(mySTFT, (void*) power[channel]);
+            
+            for (unsigned long freq=0; freq<freq_len; freq++)
+                maxpower[freq] = max( maxpower[freq], power[channel][freq] );
+            
+        }
+    }
+    
     // Initialize window and context
     SDL_Window* wnd = init_GL();
     
@@ -185,6 +199,11 @@ int main(int argc, char** argv) {
             // Compute STFT
             spectrogram_execute(mySTFT, (void*) (audio.get_data() + num_channels * start_index + channel) );
             spectrogram_get_power_periodogram(mySTFT, (void*) power[channel]);
+            
+            // Rescale power
+            for (unsigned long freq=0; freq<freq_len; freq++) {
+                power[channel][freq] /= maxpower[freq];
+            }
 
             // Update the buffer
             glBindBuffer(GL_ARRAY_BUFFER, VBO[channel]);
