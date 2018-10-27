@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
     
     // Get maximum power at each frequency
     float *maxpower = (float*) calloc(freq_len, sizeof(float));
-    for (int start_index=0; start_index<num_samples-props.num_samples; start_index+=1470) {
+    for (unsigned int start_index=0; start_index<num_samples-props.num_samples; start_index+=1470) {
         for (int channel=0; channel<num_channels; channel++) {
             
             spectrogram_execute(mySTFT, (void*) (audio.get_data() + num_channels * start_index + channel) );
