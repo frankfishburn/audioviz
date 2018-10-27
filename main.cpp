@@ -54,13 +54,13 @@ int main(int argc, char** argv) {
     InputProps props;
     props.data_size = sizeof(float);
     props.sample_rate = sample_rate;
-    props.num_samples = 4096;
+    props.num_samples = 8192;
     props.stride = num_channels;
     
     StftConfig config;
     config.padding_mode = TRUNCATE;
-    config.window_length = 512;
-    config.window_overlap = 256;
+    config.window_length = 8192;
+    config.window_overlap = 4096;
     config.window_type = HAMMING;
     
     SpectrogramTransform *mySTFT = spectrogram_create( &props, &config );
