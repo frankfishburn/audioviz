@@ -102,12 +102,12 @@ int main(int argc, char** argv) {
     
     GLint ampAttrib = glGetAttribLocation(shaderProgram, "amplitude");
     GLint numUniform = glGetUniformLocation(shaderProgram, "num_freq");
-    GLint nyquistUniform = glGetUniformLocation(shaderProgram, "nyquist_freq");
+    GLint multUniform = glGetUniformLocation(shaderProgram, "multiplier");
     GLint rgbUniform = glGetUniformLocation(shaderProgram, "RGB");
     
     // Set static uniforms
-    glUniform1i(numUniform, freq_len);
-    glUniform1f(nyquistUniform, freq[freq_len-1]);
+    unsigned long freq_draw_len = freq_len / 20;
+    glUniform1i(numUniform, freq_draw_len);
     
     // Setup framebuffer shaders
     GLuint screenShaderProgram;
@@ -217,7 +217,11 @@ int main(int argc, char** argv) {
                 glUniform3f(rgbUniform, 0.0f, 0.0f, 1.0f);
             }
             
-            glDrawArrays(GL_LINE_STRIP, 0, freq_len );
+            glUniform1f(multUniform, 1.0);
+            glDrawArrays(GL_LINE_STRIP, 0, freq_draw_len );
+            
+            glUniform1f(multUniform, -1.0);
+            glDrawArrays(GL_LINE_STRIP, 0, freq_draw_len );
         }
         
         // Render offscreen buffer to screen
