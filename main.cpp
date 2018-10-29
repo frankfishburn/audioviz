@@ -11,7 +11,7 @@
 #include "audio_manager.h"
 
 #include "opengl.h"
-#include "shaders.h"
+#include "shader_program.h"
 
 const char *vertex_source = 
 #include "shaders/vert_direct_freq.glsl"
@@ -95,24 +95,14 @@ int main(int argc, char** argv) {
     SDL_Window* wnd = init_GL();
     
     // Setup shaders
-    int status;
-    GLuint shaderProgram;
-    status = setup_shaders_source(shaderProgram, vertex_source, fragment_source);
-    if (status!=0) { return 1; }
+    ShaderProgram main_shader(vertex_source, fragment_source);
+    ShaderProgram fb_shader(vertex_tex_source, fragment_tex_source);
     
-    GLint ampAttrib = glGetAttribLocation(shaderProgram, "amplitude");
-    GLint numUniform = glGetUniformLocation(shaderProgram, "num_freq");
-    GLint multUniform = glGetUniformLocation(shaderProgram, "multiplier");
-    GLint rgbUniform = glGetUniformLocation(shaderProgram, "RGB");
+    main_shader.use();
     
     // Set static uniforms
-    unsigned long freq_draw_len = freq_len / 20;
-    glUniform1i(numUniform, freq_draw_len);
-    
-    // Setup framebuffer shaders
-    GLuint screenShaderProgram;
-    status = setup_shaders_source(screenShaderProgram, vertex_tex_source, fragment_tex_source);
-    if (status!=0) { return 1; }
+    int freq_draw_len = freq_len / 20;
+    main_shader.set_uniform("num_freq",freq_draw_len);
     
     // Set up vertex buffer/array object for each channel
     GLuint VBO[num_channels];
@@ -126,12 +116,13 @@ int main(int argc, char** argv) {
         glBufferData(GL_ARRAY_BUFFER, freq_len * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
         
         glBindVertexArray( VAO[channel] );
-        glEnableVertexAttribArray(ampAttrib);
-        glVertexAttribPointer(ampAttrib, 1, GL_FLOAT, GL_FALSE, sizeof(float), 0 );
+        
+        main_shader.set_attrib("amplitude",sizeof(float));
         
     }
     
     // Create a framebuffer
+    int status;
     GLuint offscreenBuffer, screenTexture, screenVAO, screenVBO;
     status = setup_framebuffer( wnd, &offscreenBuffer , &screenTexture , &screenVAO , &screenVBO );
     if (status!=0) { return 1; }
@@ -187,7 +178,8 @@ int main(int argc, char** argv) {
         glBindFramebuffer(GL_FRAMEBUFFER, offscreenBuffer);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        glUseProgram(shaderProgram);
+        
+        main_shader.use();
         
         // Update current time
         long current_sample = audio.get_current_sample();
@@ -212,28 +204,28 @@ int main(int argc, char** argv) {
             glBindVertexArray( VAO[channel] );
             
             if (channel==0){
-                glUniform3f(rgbUniform, 1.0f, 0.0f, 0.0f);
+                main_shader.set_uniform("RGB", 1.0f, 0.0f, 0.0f);
             } else {
-                glUniform3f(rgbUniform, 0.0f, 0.0f, 1.0f);
+                main_shader.set_uniform("RGB", 0.0f, 0.0f, 1.0f);                
             }
             
-            glUniform1f(multUniform, 1.0);
+            main_shader.set_uniform("multiplier", 1.0f);
             glDrawArrays(GL_LINE_STRIP, 0, freq_draw_len );
             
-            glUniform1f(multUniform, -1.0);
+            main_shader.set_uniform("multiplier", -1.0f);
             glDrawArrays(GL_LINE_STRIP, 0, freq_draw_len );
         }
-        
+     
         // Render offscreen buffer to screen
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        glUseProgram(screenShaderProgram);
+        fb_shader.use();
         glBindVertexArray(screenVAO);
         glDisable(GL_DEPTH_TEST);
         glBindTexture(GL_TEXTURE_2D, screenTexture);
         glDrawArrays(GL_TRIANGLES, 0, 6);
-        
+
         SDL_GL_SwapWindow(wnd);
         
     };
