@@ -12,18 +12,13 @@
 
 #include "opengl.h"
 #include "shader_program.h"
+#include "framebuffer.h"
 
 const char *vertex_source = 
 #include "shaders/vert_direct_freq.glsl"
 ;
 const char *fragment_source = 
 #include "shaders/frag_plain.glsl"
-;
-const char *vertex_tex_source = 
-#include "shaders/vert_tex.glsl"
-;
-const char *fragment_tex_source = 
-#include "shaders/frag_tex.glsl"
 ;
 
 using namespace std;
@@ -96,7 +91,6 @@ int main(int argc, char** argv) {
     
     // Setup shaders
     ShaderProgram main_shader(vertex_source, fragment_source);
-    ShaderProgram fb_shader(vertex_tex_source, fragment_tex_source);
     
     main_shader.use();
     
@@ -122,10 +116,7 @@ int main(int argc, char** argv) {
     }
     
     // Create a framebuffer
-    int status;
-    GLuint offscreenBuffer, screenTexture, screenVAO, screenVBO;
-    status = setup_framebuffer( wnd, &offscreenBuffer , &screenTexture , &screenVAO , &screenVBO );
-    if (status!=0) { return 1; }
+    FrameBuffer *fb = new FrameBuffer(wnd);
     
     // Enable v-sync
     SDL_GL_SetSwapInterval(1);
@@ -155,9 +146,8 @@ int main(int argc, char** argv) {
                     
                 case SDL_WINDOWEVENT:
                     if(e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-                        
-                        destroy_framebuffer( &offscreenBuffer , &screenTexture , &screenVAO , &screenVBO );
-                        setup_framebuffer( wnd, &offscreenBuffer , &screenTexture , &screenVAO , &screenVBO );
+                        delete fb;
+                        fb = new FrameBuffer(wnd);
                         glBindFramebuffer(GL_FRAMEBUFFER, 0);
                         glViewport(0, 0, e.window.data1, e.window.data2);
                     }
@@ -174,11 +164,7 @@ int main(int argc, char** argv) {
             }
         }
 
-        // Bind framebuffer render target
-        glBindFramebuffer(GL_FRAMEBUFFER, offscreenBuffer);
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-        
+        fb->bind();
         main_shader.use();
         
         // Update current time
@@ -216,15 +202,8 @@ int main(int argc, char** argv) {
             glDrawArrays(GL_LINE_STRIP, 0, freq_draw_len );
         }
      
-        // Render offscreen buffer to screen
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-        fb_shader.use();
-        glBindVertexArray(screenVAO);
-        glDisable(GL_DEPTH_TEST);
-        glBindTexture(GL_TEXTURE_2D, screenTexture);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        fb->unbind();
+        fb->draw();
 
         SDL_GL_SwapWindow(wnd);
         
