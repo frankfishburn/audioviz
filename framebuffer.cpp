@@ -8,17 +8,33 @@ const char *fragment_tex_source =
 ;
 
 FrameBuffer::FrameBuffer(SDL_Window* wnd) {
-    
+        
     // Compile/link shader
     shader = new ShaderProgram(vertex_tex_source, fragment_tex_source);
+    
+    // Initialize framebuffer
+    window = wnd;
+    init();
+    
+}
 
+
+FrameBuffer::~FrameBuffer() {
+
+    deinit();
+    delete shader;
+    
+}
+
+void FrameBuffer::init(){
+    
     // Create a FrameBuffer
     glGenFramebuffers(1, &buffer);
     glBindFramebuffer(GL_FRAMEBUFFER, buffer);
     
     // Get window size
     int width, height;
-    SDL_GetWindowSize(wnd, &width, &height);
+    SDL_GetWindowSize(window, &width, &height);
     
     // Create the texture
     glGenTextures(1, &texture);
@@ -63,14 +79,18 @@ FrameBuffer::FrameBuffer(SDL_Window* wnd) {
     
 }
 
-FrameBuffer::~FrameBuffer() {
-
+void FrameBuffer::deinit() {
+    
     glDeleteBuffers(1, &VBO);
     glDeleteVertexArrays(1, &VAO);
     glDeleteTextures(1, &texture);
     glDeleteFramebuffers(1, &buffer);
-    delete shader;
     
+}
+
+void FrameBuffer::freshen() {
+    deinit();
+    init();
 }
 
 void FrameBuffer::bind() {

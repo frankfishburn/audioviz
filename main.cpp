@@ -116,7 +116,7 @@ int main(int argc, char** argv) {
     }
     
     // Create a framebuffer
-    FrameBuffer *fb = new FrameBuffer(wnd);
+    FrameBuffer fb(wnd);
     
     // Enable v-sync
     SDL_GL_SetSwapInterval(1);
@@ -146,8 +146,7 @@ int main(int argc, char** argv) {
                     
                 case SDL_WINDOWEVENT:
                     if(e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-                        delete fb;
-                        fb = new FrameBuffer(wnd);
+                        fb.freshen();
                         glBindFramebuffer(GL_FRAMEBUFFER, 0);
                         glViewport(0, 0, e.window.data1, e.window.data2);
                     }
@@ -164,7 +163,7 @@ int main(int argc, char** argv) {
             }
         }
 
-        fb->bind();
+        fb.bind();
         main_shader.use();
         
         // Update current time
@@ -202,8 +201,8 @@ int main(int argc, char** argv) {
             glDrawArrays(GL_LINE_STRIP, 0, freq_draw_len );
         }
      
-        fb->unbind();
-        fb->draw();
+        fb.unbind();
+        fb.draw();
 
         SDL_GL_SwapWindow(wnd);
         
