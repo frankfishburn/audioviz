@@ -35,3 +35,10 @@ SDL_Window* init_GL() {
 
     return wnd;
 }
+
+void deinit_GL() {
+    
+    SDL_QuitSubSystem(SDL_INIT_EVERYTHING);
+    SDL_Quit();
+    
+}

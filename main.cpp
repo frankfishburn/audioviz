@@ -140,14 +140,14 @@ int main(int argc, char** argv) {
     audio.play();
     
     // Render Loop
-    loop = [&]
-    {
+    bool quit=false;
+    while (!quit) {
         SDL_Event e;
         
         while(SDL_PollEvent(&e)) {
             switch(e.type) {
                 case SDL_QUIT:
-                    std::abort();
+                    quit=true;
                     break;
                     
                 case SDL_WINDOWEVENT:
@@ -163,6 +163,7 @@ int main(int argc, char** argv) {
                         case SDLK_SPACE: audio.toggle_playback(); break;
                         case SDLK_LEFT: audio.back(); break;
                         case SDLK_RIGHT: audio.forward(); break;
+                        case SDLK_ESCAPE: quit=true; break;
                     }
                     break;
                  
@@ -215,7 +216,9 @@ int main(int argc, char** argv) {
         
     };
 
-    while(true) main_loop();
+    // Cleanup
+    spectrogram_destroy(mySTFT);
+    deinit_GL();
     
     return 0;
 }

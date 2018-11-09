@@ -11,5 +11,6 @@
 void glPrintErrors();
 
 SDL_Window* init_GL();
+void deinit_GL();
 
 #endif /* OPENGL_H */
