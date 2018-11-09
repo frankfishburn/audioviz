@@ -44,22 +44,25 @@ int main(int argc, char** argv) {
     const int sample_rate = audio.get_sample_rate();
     const int num_samples = audio.get_num_samples();
     const int num_channels = audio.get_num_channels();
+    float* audio_ptr = audio.get_data();
         
     // Create spectrogram object
-    InputProps props;
+    SpectrogramInput props;
     props.data_size = sizeof(float);
     props.sample_rate = sample_rate;
-    props.num_samples = 8192;
+    props.num_samples = 4096;
     props.stride = num_channels;
     
-    StftConfig config;
-    config.padding_mode = TRUNCATE;
-    config.window_length = 8192;
-    config.window_overlap = 4096;
+    SpectrogramConfig config;
+    config.padding_mode = PAD;
+    config.window_length = 4096;
+    config.window_overlap = config.window_length / 2;
+    config.transform_length = 8192*2;
     config.window_type = HAMMING;
     
     SpectrogramTransform *mySTFT = spectrogram_create( &props, &config );
     
+    unsigned long time_len = spectrogram_get_timelen( mySTFT );
     unsigned long freq_len = spectrogram_get_freqlen( mySTFT );
     
     // Allocate STFT frequency vector
@@ -69,23 +72,26 @@ int main(int argc, char** argv) {
     // Allocate spectrogram power for each channel
     float *power[num_channels];
     for (int i=0; i<num_channels; i++) {
-        power[i] = (float*) calloc(freq_len, sizeof(float));  
+        power[i] = (float*) calloc(time_len*freq_len, sizeof(float));  
     }
     
     // Get maximum power at each frequency
-    float *maxpower = (float*) calloc(freq_len, sizeof(float));
-    for (unsigned int start_index=0; start_index<num_samples-props.num_samples; start_index+=1470) {
+    printf("Analyzing audio... "); fflush(stdout);
+    float *maxpower = (float*) calloc(time_len*freq_len, sizeof(float));
+    for (unsigned long start_index=0; start_index<num_samples-props.num_samples; start_index+=1470) {
         for (int channel=0; channel<num_channels; channel++) {
             
-            spectrogram_execute(mySTFT, (void*) (audio.get_data() + num_channels * start_index + channel) );
-            spectrogram_get_power_periodogram(mySTFT, (void*) power[channel]);
-            
-            for (unsigned long freq=0; freq<freq_len; freq++)
-                maxpower[freq] = max( maxpower[freq], power[channel][freq] );
-            
+            spectrogram_execute(mySTFT, (void*) (audio_ptr + num_channels * start_index + channel) );
+            spectrogram_get_power(mySTFT, (void*) power[channel]);
+                        
+            for (unsigned long time=0; time<time_len; time++)
+                for (unsigned long freq=0; freq<freq_len; freq++)
+                    maxpower[freq] = max( maxpower[freq], power[channel][time*freq_len+freq] );
+                
         }
     }
-    
+    printf("done\n"); fflush(stdout);
+   
     // Initialize window and context
     SDL_Window* wnd = init_GL();
     
@@ -95,7 +101,7 @@ int main(int argc, char** argv) {
     main_shader.use();
     
     // Set static uniforms
-    int freq_draw_len = freq_len / 20;
+    int freq_draw_len = freq_len / 10;
     main_shader.set_uniform("num_freq",freq_draw_len);
     
     // Set up vertex buffer/array object for each channel
@@ -175,7 +181,8 @@ int main(int argc, char** argv) {
         
             // Compute STFT
             spectrogram_execute(mySTFT, (void*) (audio.get_data() + num_channels * start_index + channel) );
-            spectrogram_get_power_periodogram(mySTFT, (void*) power[channel]);
+            spectrogram_get_power(mySTFT, (void*) power[channel]);
+            
             
             // Rescale power
             for (unsigned long freq=0; freq<freq_len; freq++) {
