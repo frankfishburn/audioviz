@@ -23,9 +23,6 @@ const char *fragment_source =
 
 using namespace std;
 
-std::function<void()> loop;
-void main_loop() { loop(); }
-
 int main(int argc, char** argv) {
     
     if (argc<2) {
