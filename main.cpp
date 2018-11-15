@@ -98,8 +98,9 @@ int main(int argc, char** argv) {
     main_shader.use();
     
     // Set static uniforms
-    int freq_draw_len = freq_len / 10;
+    int freq_draw_len = freq_len / 20;
     main_shader.set_uniform("num_freq",freq_draw_len);
+    main_shader.set_uniform("num_time",(int)time_len);
     
     // Set up vertex buffer/array object for each channel
     GLuint VBO[num_channels];
@@ -110,7 +111,7 @@ int main(int argc, char** argv) {
         
         glGenBuffers(1, &VBO[channel]);
         glBindBuffer(GL_ARRAY_BUFFER, VBO[channel]);
-        glBufferData(GL_ARRAY_BUFFER, freq_len * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, freq_draw_len * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
         
         glBindVertexArray( VAO[channel] );
         
@@ -172,15 +173,14 @@ int main(int argc, char** argv) {
         
         // Update current time
         long current_sample = audio.get_current_sample();
-        long start_index = max( (long) 0 , current_sample - (long) props.num_samples/2 );
+        long start_index = max( (long) 0 , current_sample - (long) (props.num_samples + config.window_length) );
         
         // Render each channel
         for (int channel=0; channel<num_channels; channel++){
         
             // Compute STFT
-            spectrogram_execute(mySTFT, (void*) (audio.get_data() + num_channels * start_index + channel) );
+            spectrogram_execute(mySTFT, (void*) (audio_ptr + num_channels * start_index + channel) );
             spectrogram_get_power(mySTFT, (void*) power[channel]);
-            
             
             // Rescale power
             for (unsigned long freq=0; freq<freq_len; freq++) {
@@ -189,9 +189,6 @@ int main(int argc, char** argv) {
 
             // Update the buffer
             glBindBuffer(GL_ARRAY_BUFFER, VBO[channel]);
-            glBufferSubData(GL_ARRAY_BUFFER, 0, freq_len * sizeof(GLfloat), power[channel]);
-            
-            glBindVertexArray( VAO[channel] );
             
             if (channel==0){
                 main_shader.set_uniform("RGB", 1.0f, 0.0f, 0.0f);
@@ -199,11 +196,21 @@ int main(int argc, char** argv) {
                 main_shader.set_uniform("RGB", 0.0f, 0.0f, 1.0f);                
             }
             
-            main_shader.set_uniform("multiplier", 1.0f);
-            glDrawArrays(GL_LINE_STRIP, 0, freq_draw_len );
+            for (unsigned long time=0; time<time_len; time++) {
+                
+                main_shader.set_uniform("time_idx",(int)time);
+                
+                glBufferSubData(GL_ARRAY_BUFFER, 0, freq_draw_len * sizeof(GLfloat), power[channel]+time*freq_len);
             
-            main_shader.set_uniform("multiplier", -1.0f);
-            glDrawArrays(GL_LINE_STRIP, 0, freq_draw_len );
+                glBindVertexArray( VAO[channel] );
+                
+                main_shader.set_uniform("multiplier", 1.0f);
+                glDrawArrays(GL_LINE_STRIP, 0, freq_draw_len );
+
+                main_shader.set_uniform("multiplier", -1.0f);
+                glDrawArrays(GL_LINE_STRIP, 0, freq_draw_len );
+                
+            }
         }
      
         fb.unbind();
