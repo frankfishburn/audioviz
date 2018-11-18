@@ -59,7 +59,6 @@ int main(int argc, char** argv) {
     
     SpectrogramTransform *mySTFT = spectrogram_create( &props, &config );
     
-    unsigned long time_len = spectrogram_get_timelen( mySTFT );
     unsigned long freq_len = spectrogram_get_freqlen( mySTFT );
     
     // Allocate STFT frequency vector
@@ -69,7 +68,7 @@ int main(int argc, char** argv) {
     // Allocate spectrogram power for each channel
     float *power[num_channels];
     for (int i=0; i<num_channels; i++) {
-        power[i] = (float*) calloc(time_len*freq_len, sizeof(float));  
+        power[i] = (float*) calloc(freq_len, sizeof(float));  
     }
     
     // Get maximum power at each frequency
@@ -83,9 +82,8 @@ int main(int argc, char** argv) {
             spectrogram_execute(mySTFT, (void*) (audio_ptr + num_channels * start_index + channel) );
             spectrogram_get_power(mySTFT, (void*) power[channel]);
                         
-            for (unsigned long time=0; time<time_len; time++)
-                for (unsigned long freq=0; freq<freq_len; freq++)
-                    maxpower = max( maxpower , log( 1.0f + power[channel][time*freq_len+freq] * max((unsigned long)100,freq) * max((unsigned long)100,freq) ) );
+            for (unsigned long freq=0; freq<freq_len; freq++)
+                maxpower = max( maxpower , log( 1.0f + power[channel][freq] * max((unsigned long)100,freq) * max((unsigned long)100,freq) ) );
             
         }
     }
@@ -101,7 +99,6 @@ int main(int argc, char** argv) {
     // Set static uniforms
     int freq_draw_len = freq_len / 5;
     main_shader.set_uniform("num_freq",freq_draw_len);
-    main_shader.set_uniform("num_time",(int)time_len);
     
     int viewport[4];
     glGetIntegerv(GL_VIEWPORT,viewport);
@@ -192,27 +189,21 @@ int main(int argc, char** argv) {
             
             // Rescale power
             for (unsigned long freq=0; freq<freq_len; freq++)
-                for (unsigned long time=0; time<time_len; time++)
-                    power[channel][time*freq_len+freq] = log(1.0 + power[channel][time*freq_len+freq] * max((unsigned long)100,freq) * max((unsigned long)100,freq) ) / maxpower;
+                power[channel][freq] = log(1.0 + power[channel][freq] * max((unsigned long)100,freq) * max((unsigned long)100,freq) ) / maxpower;
                     
             // Update the buffer
-            glBindBuffer(GL_ARRAY_BUFFER, VBO[channel]);
-            
-            for (unsigned long time=0; time<time_len; time++) {
-                
-                main_shader.set_uniform("time_idx",(int)time);
-                
-                glBufferSubData(GL_ARRAY_BUFFER, 0, freq_draw_len * sizeof(GLfloat), power[channel]+time*freq_len);
-            
-                glBindVertexArray( VAO[channel] );
-                
-                main_shader.set_uniform("multiplier", 1.0f);
-                glDrawArrays(GL_LINE_STRIP, 0, freq_draw_len );
+            glBindBuffer(GL_ARRAY_BUFFER, VBO[channel]);    
+            glBufferSubData(GL_ARRAY_BUFFER, 0, freq_draw_len * sizeof(GLfloat), power[channel]);
+            glBindVertexArray( VAO[channel] );
 
+            if (channel==0) {
                 main_shader.set_uniform("multiplier", -1.0f);
-                glDrawArrays(GL_LINE_STRIP, 0, freq_draw_len );
-                
+            } else {
+                main_shader.set_uniform("multiplier", 1.0f);
             }
+            
+            glDrawArrays(GL_LINE_STRIP, 0, freq_draw_len );
+
         }
      
         fb.unbind();
