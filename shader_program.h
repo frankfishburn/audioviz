@@ -16,6 +16,7 @@ public:
     
     void set_uniform(const char*, int);
     void set_uniform(const char*, float);
+    void set_uniform(const char*, float, float);
     void set_uniform(const char*, float, float, float);
     void set_attrib(const char*, size_t);
     

@@ -128,6 +128,13 @@ void ShaderProgram::set_uniform(const char* name, float value) {
 
 }
 
+void ShaderProgram::set_uniform(const char* name, float value1, float value2) {
+    
+    GLint uniform = glGetUniformLocation(program, name);
+    glUniform2f(uniform, value1, value2);
+
+}
+
 void ShaderProgram::set_uniform(const char* name, float value1, float value2, float value3) {
 
     GLint uniform = glGetUniformLocation(program, name);

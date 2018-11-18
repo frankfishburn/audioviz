@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
     SpectrogramInput props;
     props.data_size = sizeof(float);
     props.sample_rate = sample_rate;
-    props.num_samples = sample_rate/3;
+    props.num_samples = 8192;
     props.stride = num_channels;
     
     SpectrogramConfig config;
@@ -99,9 +99,13 @@ int main(int argc, char** argv) {
     main_shader.use();
     
     // Set static uniforms
-    int freq_draw_len = freq_len / 20;
+    int freq_draw_len = freq_len / 5;
     main_shader.set_uniform("num_freq",freq_draw_len);
     main_shader.set_uniform("num_time",(int)time_len);
+    
+    int viewport[4];
+    glGetIntegerv(GL_VIEWPORT,viewport);
+    main_shader.set_uniform("resolution",(float)viewport[2],(float)viewport[3]);
     
     // Set up vertex buffer/array object for each channel
     GLuint VBO[num_channels];
@@ -154,6 +158,9 @@ int main(int argc, char** argv) {
                         fb.freshen();
                         glBindFramebuffer(GL_FRAMEBUFFER, 0);
                         glViewport(0, 0, e.window.data1, e.window.data2);
+                        glGetIntegerv(GL_VIEWPORT,viewport);
+                        main_shader.use();
+                        main_shader.set_uniform("resolution",(float)viewport[2],(float)viewport[3]);
                     }
                     break;
                 
@@ -190,12 +197,6 @@ int main(int argc, char** argv) {
                     
             // Update the buffer
             glBindBuffer(GL_ARRAY_BUFFER, VBO[channel]);
-            
-            if (channel==0){
-                main_shader.set_uniform("RGB", 1.0f, 0.0f, 0.0f);
-            } else {
-                main_shader.set_uniform("RGB", 0.0f, 0.0f, 1.0f);                
-            }
             
             for (unsigned long time=0; time<time_len; time++) {
                 
