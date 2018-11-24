@@ -11,13 +11,13 @@ void main(void) {
 
     // Apply the jet colormap
     float R, G, B;
-    R = 4.0*xpos - 1.5;
+    R = 4.0*xpos - 2.0;
     if (xpos<0.5) {
-        G = 4.0*xpos - 0.5;
+        G = 4.0*xpos;
     } else {
-        G = -4.0*xpos + 3.5; 
+        G = -4.0*xpos + 4.0;
     }
-    B = -4.0*xpos + 2.5;
+    B = -4.0*xpos + 2.0;
 
     FragColor = vec4( R, G, B, 1.0 );    
 }
