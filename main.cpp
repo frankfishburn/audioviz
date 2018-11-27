@@ -67,8 +67,10 @@ int main(int argc, char** argv) {
     
     // Allocate spectrogram power for each channel
     float *power[num_channels];
+    float *power6[num_channels];
     for (int i=0; i<num_channels; i++) {
-        power[i] = (float*) calloc(freq_len, sizeof(float));  
+        power[i] = (float*) calloc(freq_len, sizeof(float));
+        power6[i] = (float*) calloc(6 * freq_len, sizeof(float));
     }
     
     // Get maximum power at each frequency
@@ -113,7 +115,7 @@ int main(int argc, char** argv) {
         
         glGenBuffers(1, &VBO[channel]);
         glBindBuffer(GL_ARRAY_BUFFER, VBO[channel]);
-        glBufferData(GL_ARRAY_BUFFER, freq_draw_len * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, 6 * freq_draw_len * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
         
         glBindVertexArray( VAO[channel] );
         
@@ -191,9 +193,17 @@ int main(int argc, char** argv) {
             for (unsigned long freq=0; freq<freq_len; freq++)
                 power[channel][freq] = log(1.0 + power[channel][freq] * max((unsigned long)100,freq) * max((unsigned long)100,freq) ) / maxpower;
                     
+            // Copy values into triangle format
+            for (unsigned long freq=0; freq<freq_len; freq++){
+                unsigned long baseidx = freq*6;
+                power6[channel][baseidx+1] = power[channel][freq];
+                power6[channel][baseidx+2] = power[channel][freq];
+                power6[channel][baseidx+4] = power[channel][freq];
+            }
+            
             // Update the buffer
             glBindBuffer(GL_ARRAY_BUFFER, VBO[channel]);    
-            glBufferSubData(GL_ARRAY_BUFFER, 0, freq_draw_len * sizeof(GLfloat), power[channel]);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, 6 * freq_draw_len * sizeof(GLfloat), power6[channel]);
             glBindVertexArray( VAO[channel] );
 
             if (channel==0) {
@@ -202,7 +212,7 @@ int main(int argc, char** argv) {
                 main_shader.set_uniform("multiplier", 1.0f);
             }
             
-            glDrawArrays(GL_LINE_STRIP, 0, freq_draw_len );
+            glDrawArrays(GL_TRIANGLES, 0, 6*freq_draw_len );
 
         }
      
