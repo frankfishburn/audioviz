@@ -9,7 +9,7 @@ class STFT {
 public:
     STFT(audio_manager& audio, SpectrogramConfig& conf, unsigned long insamples);
     STFT(const STFT& orig);
-    virtual ~STFT();
+    ~STFT();
     
     // methods
     void analyze();
