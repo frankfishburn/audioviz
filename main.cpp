@@ -192,6 +192,7 @@ int main(int argc, char** argv) {
     };
     
     // Cleanup
+    audio.pause();
     deinit_GL();
     
     return 0;
