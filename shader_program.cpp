@@ -75,8 +75,6 @@ void ShaderProgram::compile_shader(GLuint &shader, const char *shaderSource){
         fprintf(stderr,"\n\n");
         
 	glDeleteShader(shader);
-    } else {
-        printf("Compiled OK\n");
     }
     
 }
@@ -108,7 +106,6 @@ void ShaderProgram::link_shaders() {
     
     } else {
         
-        printf("Linked OK\n");
         use();
     
     }

@@ -76,8 +76,6 @@ void STFT::analyze() {
     
     maxpower = tmpmaxpower;
 
-    printf("NEW MAXPOWER: %f\n",maxpower);
-
 }
 
 void STFT::compute(const int channel, const long sample_index) {

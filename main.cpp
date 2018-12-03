@@ -55,6 +55,7 @@ int main(int argc, char** argv) {
     
     // Get number of frequencies
     unsigned long freq_len = stft.numFreq();
+    int freq_draw_len = freq_len / 3;
     
     // Create the power vectors for rendering triangles
     std::vector<std::vector<float>> powertri;
@@ -73,7 +74,6 @@ int main(int argc, char** argv) {
     main_shader.use();
     
     // Set static uniforms
-    int freq_draw_len = freq_len / 5;
     main_shader.set_uniform("num_freq",freq_draw_len);
     
     int viewport[4];
