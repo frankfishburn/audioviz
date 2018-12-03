@@ -6,13 +6,12 @@
 #include <iostream>
 #include <memory>
 
-#include "spectrogram.h"
-
 #include "audio_manager.h"
 
 #include "opengl.h"
 #include "shader_program.h"
 #include "framebuffer.h"
+#include "stft.h"
 
 const char *vertex_source = 
 #include "shaders/vert_direct_freq.glsl"
@@ -38,58 +37,33 @@ int main(int argc, char** argv) {
         return 1;
     }
     
-    const int sample_rate = audio.get_sample_rate();
-    const int num_samples = audio.get_num_samples();
     const int num_channels = audio.get_num_channels();
-    float* audio_ptr = audio.get_data();
-            
-    // Create spectrogram object
-    SpectrogramInput props;
-    props.data_size = sizeof(float);
-    props.sample_rate = sample_rate;
-    props.num_samples = 8192;
-    props.stride = num_channels;
     
+    // Configure spectrogram transform
     SpectrogramConfig config;
     config.padding_mode = PAD;
-    config.window_length = 8192;
-    config.window_overlap = config.window_length * .9;
-    config.transform_length = 8192*2;
+    config.window_length = 128;
+    config.window_overlap = config.window_length * .5;
+    config.transform_length = config.window_length * 2;
     config.window_type = HAMMING;
     
-    SpectrogramTransform *mySTFT = spectrogram_create( &props, &config );
+    // Create STFT object
+    STFT stft(audio, config, 8192);
     
-    unsigned long freq_len = spectrogram_get_freqlen( mySTFT );
+    // Analyze for maximum power
+    stft.analyze();
     
-    // Allocate STFT frequency vector
-    float *freq = (float*) calloc(freq_len, sizeof(float));
-    spectrogram_get_freq(mySTFT, (void*) freq);
+    // Get number of frequencies
+    unsigned long freq_len = stft.numFreq();
     
-    // Allocate spectrogram power for each channel
-    float *power[num_channels];
-    float *power6[num_channels];
+    // Create the power vectors for rendering triangles
+    std::vector<std::vector<float>> powertri;
+    powertri.resize(num_channels);
     for (int i=0; i<num_channels; i++) {
-        power[i] = (float*) calloc(freq_len, sizeof(float));
-        power6[i] = (float*) calloc(6 * freq_len, sizeof(float));
+        powertri[i].resize(6*freq_len);
+        std::fill( powertri[i].begin(), powertri[i].end(), 0);
     }
     
-    // Get maximum power at each frequency
-    float maxpower = -INFINITY;
-    for (double pos=0.0; pos<1.0; pos+=.01) {
-        
-        unsigned long start_index = min((unsigned long) round(pos * num_samples),num_samples-props.num_samples-1);
-        
-        for (int channel=0; channel<num_channels; channel++) {
-            
-            spectrogram_execute(mySTFT, (void*) (audio_ptr + num_channels * start_index + channel) );
-            spectrogram_get_power(mySTFT, (void*) power[channel]);
-                        
-            for (unsigned long freq=0; freq<freq_len; freq++)
-                maxpower = max( maxpower , log( 1.0f + power[channel][freq] * max((unsigned long)100,freq) * max((unsigned long)100,freq) ) );
-            
-        }
-    }
-   
     // Initialize window and context
     SDL_Window* wnd = init_GL();
     
@@ -180,30 +154,24 @@ int main(int argc, char** argv) {
         
         // Update current time
         long current_sample = audio.get_current_sample();
-        long start_index = max( (long) 0 , current_sample - (long) (props.num_samples + config.window_length) );
         
         // Render each channel
         for (int channel=0; channel<num_channels; channel++){
         
-            // Compute STFT
-            spectrogram_execute(mySTFT, (void*) (audio_ptr + num_channels * start_index + channel) );
-            spectrogram_get_power(mySTFT, (void*) power[channel]);
+            stft.compute( channel, current_sample );
+            float* power = stft.getPowerPtr( channel );
             
-            // Rescale power
-            for (unsigned long freq=0; freq<freq_len; freq++)
-                power[channel][freq] = log(1.0 + power[channel][freq] * max((unsigned long)100,freq) * max((unsigned long)100,freq) ) / maxpower;
-                    
             // Copy values into triangle format
             for (unsigned long freq=0; freq<freq_len; freq++){
                 unsigned long baseidx = freq*6;
-                power6[channel][baseidx+1] = power[channel][freq];
-                power6[channel][baseidx+2] = power[channel][freq];
-                power6[channel][baseidx+4] = power[channel][freq];
+                powertri[channel][baseidx+1] = power[freq];
+                powertri[channel][baseidx+2] = power[freq];
+                powertri[channel][baseidx+4] = power[freq];
             }
             
             // Update the buffer
             glBindBuffer(GL_ARRAY_BUFFER, VBO[channel]);    
-            glBufferSubData(GL_ARRAY_BUFFER, 0, 6 * freq_draw_len * sizeof(GLfloat), power6[channel]);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, 6 * freq_draw_len * sizeof(GLfloat), powertri[channel].data() );
             glBindVertexArray( VAO[channel] );
 
             if (channel==0) {
@@ -220,11 +188,10 @@ int main(int argc, char** argv) {
         fb.draw();
 
         SDL_GL_SwapWindow(wnd);
-        
+    
     };
-
+    
     // Cleanup
-    spectrogram_destroy(mySTFT);
     deinit_GL();
     
     return 0;
