@@ -7,8 +7,8 @@ const char *fragment_tex_source =
 #include "shaders/frag_tex.glsl"
 ;
 
-FrameBuffer::FrameBuffer(SDL_Window* wnd) {
-        
+FrameBuffer::FrameBuffer(Window* wnd) {
+
     // Compile/link shader
     shader = new ShaderProgram(vertex_tex_source, fragment_tex_source);
     
@@ -34,7 +34,7 @@ void FrameBuffer::init(){
     
     // Get window size
     int width, height;
-    SDL_GetWindowSize(window, &width, &height);
+    window->get_window_size(&width,&height);
     
     // Create the texture
     glGenTextures(1, &texture);

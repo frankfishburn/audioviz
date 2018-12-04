@@ -7,11 +7,10 @@
 #include <memory>
 
 #include "audio_manager.h"
-
-#include "opengl.h"
-#include "shader_program.h"
 #include "framebuffer.h"
+#include "shader_program.h"
 #include "stft.h"
+#include "window.h"
 
 const char *vertex_source = 
 #include "shaders/vert_direct_freq.glsl"
@@ -66,7 +65,7 @@ int main(int argc, char** argv) {
     }
     
     // Initialize window and context
-    SDL_Window* wnd = init_GL();
+    Window wnd;
     
     // Setup shaders
     ShaderProgram main_shader(vertex_source, fragment_source);
@@ -98,7 +97,7 @@ int main(int argc, char** argv) {
     }
     
     // Create a framebuffer
-    FrameBuffer fb(wnd);
+    FrameBuffer fb(&wnd);
     
     // Enable v-sync
     SDL_GL_SetSwapInterval(1);
@@ -110,7 +109,7 @@ int main(int argc, char** argv) {
     glDepthMask(false);
     
     // Check for GL errors
-    glPrintErrors();
+    wnd.check_errors();
     
     // Start audio
     audio.play();
@@ -186,14 +185,12 @@ int main(int argc, char** argv) {
      
         fb.unbind();
         fb.draw();
-
-        SDL_GL_SwapWindow(wnd);
+        wnd.swap();
     
     };
     
     // Cleanup
     audio.pause();
-    deinit_GL();
     
     return 0;
 }

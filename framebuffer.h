@@ -1,13 +1,12 @@
 #ifndef FRAMEBUFFER_H
 #define FRAMEBUFFER_H
 
-#include <SDL2/SDL.h>
-#include <GLES3/gl3.h>
 #include "shader_program.h"
+#include "window.h"
 
 class FrameBuffer {
 public:
-    FrameBuffer(SDL_Window *wnd);
+    FrameBuffer(Window* wnd);
     virtual ~FrameBuffer();
     void bind();
     void unbind();
@@ -15,7 +14,7 @@ public:
     void freshen();
     
 private:
-    SDL_Window* window;
+    Window* window;
     GLuint buffer;
     GLuint texture;
     GLuint VAO;

@@ -21,7 +21,7 @@ find_path(SPECTROGRAM_INCLUDE_DIR spectrogram.h PATH_SUFFIXES include)
 find_library(SPECTROGRAM_LIB NAMES spectrogram PATH_SUFFIXES build/src)
 include_directories(${SPECTROGRAM_INCLUDE_DIR})
 
-add_executable(audioviz main.cpp audio_manager.cpp opengl.cpp shader_program.cpp framebuffer.cpp stft.cpp)
+add_executable(audioviz main.cpp audio_manager.cpp framebuffer.cpp shader_program.cpp stft.cpp window.cpp)
 target_link_libraries(audioviz GLESv2 SDL2 SDL2_image)
 target_link_libraries(audioviz avcodec avformat avutil avdevice bz2 swresample)
 target_link_libraries(audioviz ${FFTW_LIBS} ${FFTWF_LIBS} ${SPECTROGRAM_LIB} )
