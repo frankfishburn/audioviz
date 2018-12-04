@@ -8,7 +8,6 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libswresample/swresample.h>
-#include <vector>
 }
 
 audio_manager::audio_manager(const char *filename) {
@@ -28,6 +27,8 @@ audio_manager::audio_manager(const audio_manager& orig) {
 
 audio_manager::~audio_manager() {
     
+    SDL_CloseAudio();
+    
     if (isLoaded) {
         isLoaded=false;
         isPlayable=false;
@@ -46,7 +47,6 @@ void audio_manager::load_file() {
         fprintf(stderr, "Could not open file '%s'\n", filename); fflush(stderr);
         return;
     }
-    printf("Format %s, duration %ld us\n", format->iformat->long_name, format->duration);
     
     if (avformat_find_stream_info(format, NULL) < 0) {
         fprintf(stderr, "Could not retrieve stream info from file '%s'\n", filename); fflush(stderr);
@@ -74,28 +74,9 @@ void audio_manager::load_file() {
         fprintf(stderr, "Failed to open decoder for stream #%u in file '%s'\n", stream->id, filename); fflush(stderr);
         return;
     }
-    
-    printf("Audio Codec: %d channels, sample rate %d\n", stream->codecpar->channels, stream->codecpar->sample_rate);
-    
+        
     num_channels = stream->codecpar->channels;
     sample_rate = stream->codecpar->sample_rate;
-    
-    // prepare to read data
-    AVPacket* packet = av_packet_alloc();
-    AVFrame* frame = av_frame_alloc();
-    AVFrame* outframe = av_frame_alloc();
-    av_frame_copy_props(outframe, frame);
-    
-    outframe->channel_layout = AV_CH_LAYOUT_STEREO;
-    outframe->sample_rate = stream->codecpar->sample_rate;
-    outframe->format = AV_SAMPLE_FMT_FLT;
-    
-    av_init_packet(packet);
-    
-    if (!frame) {
-        fprintf(stderr, "Error allocating the frame\n");
-        return;
-    }
     
     // prepare resampler
     struct SwrContext* swr = swr_alloc();
@@ -113,7 +94,24 @@ void audio_manager::load_file() {
         return;
     }
 
-    // iterate through frames
+    // prepare to read data
+    AVPacket* packet = av_packet_alloc();
+    AVFrame* frame = av_frame_alloc();
+    AVFrame* outframe = av_frame_alloc();
+    
+    av_frame_copy_props(outframe, frame);
+    outframe->channel_layout = AV_CH_LAYOUT_STEREO;
+    outframe->sample_rate = stream->codecpar->sample_rate;
+    outframe->format = AV_SAMPLE_FMT_FLT;
+    
+    av_init_packet(packet);
+    
+    if (!frame) {
+        fprintf(stderr, "Error allocating the frame\n");
+        return;
+    }
+    
+    // iterate through frames  
     unsigned long oldsize = 0;
     unsigned long newsize = 0;
     while ( av_read_frame(format,packet) >=0 ) {
@@ -136,17 +134,28 @@ void audio_manager::load_file() {
         data.resize(newsize);
         memcpy(data.data()+oldsize, outframe->data[0], outframe->nb_samples * outframe->channels * sizeof(float) );
 
+        // Close packet/frame
+        av_frame_unref(frame);
+        av_packet_unref(packet);
+        
     }
 
     num_samples = newsize / num_channels;
     
     // clean up
+    av_frame_free(&outframe);
+    av_frame_free(&frame);
+    av_packet_free(&packet);
+    
     swr_close(swr);
     swr_free(&swr);
-    av_packet_free(&packet);
-    av_frame_free(&frame);
-    av_frame_free(&outframe);
+    
+    avformat_flush(format);
+    
     avcodec_close(context);
+    avcodec_free_context(&context);
+    
+    avformat_close_input(&format);
     avformat_free_context(format);
     
     printf("Loaded file: %lu channels, %lu samples, %lu Hz\n",num_channels,num_samples,sample_rate); fflush(stdout);

@@ -2,9 +2,7 @@
 #define AUDIO_MANAGER_H
 
 #include <vector>
-#include <fstream>
-#include <string.h>
-#include <stdlib.h>
+#include <string>
 
 class audio_manager {
 public:
@@ -49,7 +47,6 @@ private:
     unsigned long num_channels = 0;
     unsigned long num_samples = 0;
     unsigned long sample_rate = 0;
-    //float *data = NULL;
     std::vector<float> data;
     std::string input_file;
     
