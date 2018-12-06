@@ -138,20 +138,15 @@ void audio_manager::load_file() {
         fprintf(stderr, "Resampler could not be initialized\n");
         return;
     }
-
+    
     // prepare to read data
     AVPacket* packet = av_packet_alloc();
+    av_init_packet(packet);
+    
     AVFrame* frame = av_frame_alloc();
     AVFrame* outframe = av_frame_alloc();
     
-    av_frame_copy_props(outframe, frame);
-    outframe->channel_layout = AV_CH_LAYOUT_STEREO;
-    outframe->sample_rate = stream->codecpar->sample_rate;
-    outframe->format = AV_SAMPLE_FMT_FLT;
-    
-    av_init_packet(packet);
-    
-    if (!frame) {
+    if (!frame || !outframe) {
         fprintf(stderr, "Error allocating the frame\n");
         return;
     }
@@ -179,19 +174,29 @@ void audio_manager::load_file() {
             break;
         }
         
-        swr_convert_frame(swr,outframe,frame);        
+        av_frame_copy_props(outframe, frame);
+        outframe->channel_layout = AV_CH_LAYOUT_STEREO;
+        outframe->format = AV_SAMPLE_FMT_FLT;
+        outframe->sample_rate = frame->sample_rate;
+
+        status = swr_convert_frame(swr,outframe,frame);
+        if (status != 0) {
+            av_strerror(status,errmsg,256);
+            fprintf(stderr,"Resample error at index %lu (%s)\n",newsize,errmsg); fflush(stderr);
+            break;
+        }
         
         oldsize = newsize;
-        newsize = oldsize + frame->nb_samples * frame->channels;
+        newsize = oldsize + outframe->nb_samples * outframe->channels;
         
         // Expand array and copy frame contents
         data.resize(newsize);
         memcpy(data.data()+oldsize, outframe->data[0], outframe->nb_samples * outframe->channels * sizeof(float) );
-
+        
         // Close packet/frame
+        av_frame_unref(outframe);
         av_frame_unref(frame);
         av_packet_unref(packet);
-        
     }
     
     num_samples = newsize / num_channels;
