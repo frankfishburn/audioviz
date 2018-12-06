@@ -30,12 +30,27 @@ int main(int argc, char** argv) {
     
     // Load audio and setup playback
     audio_manager audio(argv[1]);
-   
-    if (!audio.is_playable()) {
-        fprintf(stderr,"Audio problem, bailing out!\n");
+    
+    if (!audio.is_playable() || audio.get_num_samples()==0) {
+        fprintf(stderr,"Audio problem, bailing out!\n"); fflush(stderr);
         return 1;
     }
     
+    // Print metadata
+    if (!audio.get_title().empty()) {
+        printf("Playing \"%s\"",audio.get_title().c_str());
+        if (!audio.get_artist().empty()) {
+            printf(" by \"%s\"",audio.get_artist().c_str());
+        }
+        if (!audio.get_album().empty()) {
+            printf(" on \"%s\"",audio.get_album().c_str());
+        }
+        if (!audio.get_year().empty()) {
+            printf(" (%s)",audio.get_year().c_str());
+        }
+    }
+    printf("\n");
+            
     const int num_channels = audio.get_num_channels();
     
     // Configure spectrogram transform

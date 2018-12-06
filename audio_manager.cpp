@@ -65,6 +65,28 @@ void audio_manager::load_file() {
         return;
     }
     
+    
+    // Read the metadata
+    AVDictionaryEntry *tag = NULL;
+    
+    tag = av_dict_get(format->metadata, "artist", NULL, 0);
+    if (tag != NULL)
+        artist = std::string(tag->value);
+    
+    tag = av_dict_get(format->metadata, "album", NULL, 0);
+    if (tag != NULL)
+        album = std::string(tag->value);
+    
+    tag = av_dict_get(format->metadata, "title", NULL, 0);
+    if (tag != NULL)
+        title = std::string(tag->value);
+    
+    tag = av_dict_get(format->metadata, "originalyear", NULL, 0);
+    if (tag != NULL)
+        year = std::string(tag->value);
+    
+    
+    
     // Setup decoder    
     AVCodec* codec = avcodec_find_decoder(stream->codecpar->codec_id);
     AVCodecContext* context = avcodec_alloc_context3(codec);

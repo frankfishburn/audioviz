@@ -31,6 +31,12 @@ public:
     unsigned long get_sample_rate() {return sample_rate;};
     float* get_data() {return data.data();};
     
+    // Query metadata
+    std::string get_artist() {return artist;};
+    std::string get_album() {return album;};
+    std::string get_title() {return title;};
+    std::string get_year() {return year;};
+    
 private:
     
     // Player state
@@ -49,6 +55,12 @@ private:
     unsigned long sample_rate = 0;
     std::vector<float> data;
     std::string input_file;
+    
+    // Metadata
+    std::string artist;
+    std::string album;
+    std::string title;
+    std::string year;
     
     // Initialization
     void load_file(); // File
