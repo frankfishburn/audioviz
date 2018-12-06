@@ -37,34 +37,55 @@ audio_manager::~audio_manager() {
 }
 
 void audio_manager::load_file() {
-    
+
+    int status;
+    char errmsg[256];
     const char* filename = input_file.c_str();
+    AVFormatContext* format;
+    AVCodecContext* context;
+    AVStream* stream;
+    AVCodec* codec;
     
-    // get format from audio file
-    AVFormatContext* format = avformat_alloc_context();
-    
-    if (avformat_open_input(&format, filename, NULL, NULL) != 0) {
+    // Open file
+    format = avformat_alloc_context();
+    status = avformat_open_input(&format, filename, NULL, NULL);
+    if (status != 0) {
+        avformat_free_context(format);
         fprintf(stderr, "Could not open file '%s'\n", filename); fflush(stderr);
         return;
     }
     
-    if (avformat_find_stream_info(format, NULL) < 0) {
-        fprintf(stderr, "Could not retrieve stream info from file '%s'\n", filename); fflush(stderr);
+    // Detect streams
+    status = avformat_find_stream_info(format, NULL);
+    if (status < 0) {
+        avformat_close_input(&format);
+        avformat_free_context(format);
+        av_strerror(status,errmsg,256);
+        fprintf(stderr, "Could not retrieve stream info (%s)\n", errmsg); fflush(stderr);
         return;
     }
     
-    // Find the index of the first audio stream
-    AVStream* stream = format->streams[0];
-    for (unsigned int i=0; i<format->nb_streams; i++) {
-        stream = format->streams[i];
-        if (stream->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
-            break;
+    // Determine best stream
+    status = av_find_best_stream( format, AVMEDIA_TYPE_AUDIO, -1, -1, &codec, 0 );
+    if (status == AVERROR_STREAM_NOT_FOUND) {
+        avformat_close_input(&format);
+        avformat_free_context(format);
+        fprintf(stderr, "No audio stream found in file '%s'\n", filename); fflush(stderr);
+        return;
     }
-    if (stream->codecpar->codec_type != AVMEDIA_TYPE_AUDIO) {
-        fprintf(stderr, "Could not retrieve audio stream from file '%s'\n", filename); fflush(stderr);
+    if (status == AVERROR_DECODER_NOT_FOUND) {
+        avformat_close_input(&format);
+        avformat_free_context(format);
+        fprintf(stderr, "No decoder found for audio stream in file '%s'\n", filename); fflush(stderr);
         return;
     }
     
+    // Set selected stream
+    int streamidx = status;
+    stream = format->streams[streamidx];
+    stream->need_parsing = AVSTREAM_PARSE_TIMESTAMPS;
+    num_channels = stream->codecpar->channels;
+    sample_rate = stream->codecpar->sample_rate;
     
     // Read the metadata
     AVDictionaryEntry *tag = NULL;
@@ -85,20 +106,17 @@ void audio_manager::load_file() {
     if (tag != NULL)
         year = std::string(tag->value);
     
-    
-    
     // Setup decoder    
-    AVCodec* codec = avcodec_find_decoder(stream->codecpar->codec_id);
-    AVCodecContext* context = avcodec_alloc_context3(codec);
+    context = avcodec_alloc_context3(codec);
     avcodec_parameters_to_context(context, stream->codecpar);
-    
-    if (avcodec_open2(context, codec, NULL) < 0) {
+    status = avcodec_open2(context, codec, NULL);
+    if (status < 0) {
+        avcodec_free_context(&context);
+        avformat_close_input(&format);
+        avformat_free_context(format);
         fprintf(stderr, "Failed to open decoder for stream #%u in file '%s'\n", stream->id, filename); fflush(stderr);
         return;
     }
-        
-    num_channels = stream->codecpar->channels;
-    sample_rate = stream->codecpar->sample_rate;
     
     // prepare resampler
     struct SwrContext* swr = swr_alloc();
@@ -112,7 +130,12 @@ void audio_manager::load_file() {
     av_opt_set_sample_fmt(swr, "out_sample_fmt", AV_SAMPLE_FMT_FLT,  0);
     swr_init(swr);
     if (!swr_is_initialized(swr)) {
-        fprintf(stderr, "Resampler has not been properly initialized\n");
+        swr_free(&swr);
+        avcodec_close(context);
+        avcodec_free_context(&context);
+        avformat_close_input(&format);
+        avformat_free_context(format);
+        fprintf(stderr, "Resampler could not be initialized\n");
         return;
     }
 
@@ -133,21 +156,30 @@ void audio_manager::load_file() {
         return;
     }
     
-    // iterate through frames  
+    // iterate through frames 
     unsigned long oldsize = 0;
     unsigned long newsize = 0;
     while ( av_read_frame(format,packet) >=0 ) {
         
-        if (avcodec_send_packet(context, packet) < 0) {
-            printf("Bad packet at size=%lu\n",newsize);
+        if (packet->stream_index != streamidx) {
+            continue;
+        }
+        
+        status = avcodec_send_packet(context, packet);
+        if (status < 0) {
+            av_strerror(status,errmsg,256);
+            fprintf(stderr,"Packet error at index %lu (%s)\n",newsize,errmsg); fflush(stderr);
             break;
         }
-        if (avcodec_receive_frame(context, frame) < 0 ) {
-            printf("Bad frame at size=%lu\n",newsize);
+        
+        status = avcodec_receive_frame(context, frame);
+        if (status < 0) {
+            av_strerror(status,errmsg,256);
+            fprintf(stderr,"Frame error at index %lu (%s)\n",newsize,errmsg); fflush(stderr);
             break;
         }
-                
-        swr_convert_frame(swr,outframe,frame);
+        
+        swr_convert_frame(swr,outframe,frame);        
         
         oldsize = newsize;
         newsize = oldsize + frame->nb_samples * frame->channels;
@@ -161,7 +193,7 @@ void audio_manager::load_file() {
         av_packet_unref(packet);
         
     }
-
+    
     num_samples = newsize / num_channels;
     
     // clean up
@@ -171,8 +203,6 @@ void audio_manager::load_file() {
     
     swr_close(swr);
     swr_free(&swr);
-    
-    avformat_flush(format);
     
     avcodec_close(context);
     avcodec_free_context(&context);
