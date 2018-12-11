@@ -56,20 +56,20 @@ int main(int argc, char** argv) {
     // Configure spectrogram transform
     SpectrogramConfig config;
     config.padding_mode = PAD;
-    config.window_length = 128;
+    config.window_length = 4096;
     config.window_overlap = config.window_length * .5;
-    config.transform_length = config.window_length * 2;
+    config.transform_length = config.window_length * 4;
     config.window_type = HAMMING;
     
     // Create STFT object
-    STFT stft(audio, config, 8192);
+    STFT stft(audio, config, 4096*2);
     
     // Analyze for maximum power
     stft.analyze();
     
     // Get number of frequencies
-    unsigned long freq_len = stft.numFreq();
-    int freq_draw_len = freq_len / 3;
+    unsigned long freq_len = stft.maxGoodFreq();
+    int freq_draw_len = stft.maxGoodFreq();
     
     // Create the power vectors for rendering triangles
     std::vector<std::vector<float>> powertri;

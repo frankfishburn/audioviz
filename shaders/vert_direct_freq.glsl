@@ -8,9 +8,9 @@ void main(void){
     float freq = floor(float(gl_VertexID) / 6.0);
     float vert = float(gl_VertexID) - 6.0*freq;
     if (vert==2.0 || vert==4.0 || vert==5.0) {
-        freq += 0.2;
+        freq += 0.5;
     } else {
-        freq -= 0.2;
+        freq -= 0.5;
     }
     
     float y_pos = 1.95 * (freq + 0.5 - float(num_freq)/2.0) / float(num_freq);
