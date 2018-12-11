@@ -44,7 +44,8 @@ STFT::STFT(const STFT& orig) {
 
 STFT::~STFT() {
 
-spectrogram_destroy(program);
+    delete interpolator;
+    spectrogram_destroy(program);
 
 }
 
@@ -81,6 +82,9 @@ void STFT::initialize() {
         power[i].resize(time_len*freq_len);
         std::fill(power[i].begin(), power[i].end(), 0);
     }
+    
+    // Setup interpolator
+    interpolator = new interpolant((int)freq_len,freq.data(),out_freq_len,out_freq.data());
     
 }
 
@@ -129,27 +133,7 @@ void STFT::compute(const int channel, const long sample_index) {
         }
     }
     
-    // Perform linear interpolation into output frequencies
-    for (int fidx=0; fidx<out_freq_len; fidx++) {
-        
-        float target_freq = out_freq[fidx];
-        
-        // Identify relevant indices in original frequency vector
-        int lowidx, highidx;
-        for (int idx=1; idx<freq_len-1; idx++) {
-            if (freq[idx]>target_freq) {
-                lowidx = idx-1;
-                highidx = idx;
-                break;
-            }
-        }
-        
-        // Interpolate
-        out_power[channel][fidx] = (power[channel][lowidx]*(freq[highidx]-target_freq)
-                + power[channel][highidx]*(target_freq-freq[lowidx]))
-                / (freq[highidx]-freq[lowidx]);
-        
-    }
+    interpolator->estimate(power[channel].data(),out_power[channel].data());
     
 }
 

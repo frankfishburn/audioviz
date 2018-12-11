@@ -2,6 +2,7 @@
 #define STFT_H
 
 #include <vector>
+#include "interpolant.h"
 #include "spectrogram.h"
 #include "audio_manager.h"
 
@@ -41,6 +42,7 @@ private:
     int out_freq_len;
     std::vector<float> out_freq;
     std::vector<std::vector<float>> out_power;
+    interpolant* interpolator;
     
     float maxpower = 1.0;
 };
