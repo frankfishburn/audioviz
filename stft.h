@@ -12,6 +12,7 @@ public:
     ~STFT();
     
     // methods
+    void initialize();
     void analyze();
     void compute(const int channel, const long sample_index);
     

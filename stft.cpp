@@ -23,6 +23,33 @@ STFT::STFT(audio_manager& audio, SpectrogramConfig& inputconfig, unsigned long i
     config.transform_length = inputconfig.transform_length;
     config.window_type = inputconfig.window_type;
     
+    initialize();
+    
+}
+
+
+STFT::STFT(const STFT& orig) {
+
+    // Copy parameters
+    num_channels = orig.num_channels;
+    num_samples = orig.num_samples;
+    audio_ptr = orig.audio_ptr;
+    
+    props = orig.props;
+    config = orig.config;
+    
+    initialize();
+    
+}
+
+STFT::~STFT() {
+
+spectrogram_destroy(program);
+
+}
+
+void STFT::initialize() {
+    
     // Create spectrogram object
     program = spectrogram_create( &props, &config );
     
@@ -41,42 +68,6 @@ STFT::STFT(audio_manager& audio, SpectrogramConfig& inputconfig, unsigned long i
         std::fill(power[i].begin(), power[i].end(), 0);
     }
     
-}
-
-STFT::STFT(const STFT& orig) {
-
-    // Copy parameters
-    num_channels = orig.num_channels;
-    num_samples = orig.num_samples;
-    audio_ptr = orig.audio_ptr;
-    
-    props = orig.props;
-    config = orig.config;
-    
-    // Create a new spectrogram object
-    program = spectrogram_create( &props, &config );
-    
-    // Get derived output dimensions
-    time_len = 1; //spectrogram_get_timelen( program );
-    freq_len = spectrogram_get_freqlen( program );
-    
-    // Get frequency vector
-    freq.resize(freq_len);
-    spectrogram_get_freq(program, (void*) freq.data());
-    
-    // Allocate spectrogram power for each channel
-    power.resize(num_channels);
-    for (int i=0; i<num_channels; i++) {
-        power[i].resize(time_len*freq_len);
-        std::fill(power[i].begin(), power[i].end(), 0);
-    }
-    
-}
-
-STFT::~STFT() {
-
-spectrogram_destroy(program);
-
 }
 
 void STFT::analyze() {
