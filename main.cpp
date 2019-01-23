@@ -68,17 +68,17 @@ int main(int argc, char** argv) {
     stft.analyze();
     
     // Get number of frequencies
-    unsigned long freq_len = stft.maxGoodFreq();
-    int freq_draw_len = stft.maxGoodFreq();
+    const unsigned long num_frequencies = stft.maxGoodFreq();
+    const unsigned long num_trapezoids = num_frequencies - 1;
+    const unsigned long num_triangles = 2 * num_trapezoids;
+    const unsigned long num_vertices = 3 * num_triangles;
     
-    // Create the power vectors for rendering triangles
-    std::vector<std::vector<float>> powertri;
-    powertri.resize(num_channels);
+    // Allocate vertex vector
+    std::vector<std::vector<float>> vertices(num_channels);
     for (int i=0; i<num_channels; i++) {
-        powertri[i].resize(6*freq_len);
-        std::fill( powertri[i].begin(), powertri[i].end(), 0);
+        vertices[i] = std::vector<float>(num_vertices);
     }
-    
+        
     // Initialize window and context
     Window wnd;
     
@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
     main_shader.use();
     
     // Set static uniforms
-    main_shader.set_uniform("num_freq",freq_draw_len);
+    main_shader.set_uniform("num_freq",(int)num_frequencies);
     
     int viewport[4];
     glGetIntegerv(GL_VIEWPORT,viewport);
@@ -103,7 +103,7 @@ int main(int argc, char** argv) {
         
         glGenBuffers(1, &VBO[channel]);
         glBindBuffer(GL_ARRAY_BUFFER, VBO[channel]);
-        glBufferData(GL_ARRAY_BUFFER, 6 * freq_draw_len * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, num_vertices * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
         
         glBindVertexArray( VAO[channel] );
         
@@ -175,17 +175,18 @@ int main(int argc, char** argv) {
             stft.compute( channel, current_sample );
             float* power = stft.getPowerPtr( channel );
             
-            // Copy values into triangle format
-            for (unsigned long freq=0; freq<freq_len; freq++){
-                unsigned long baseidx = freq*6;
-                powertri[channel][baseidx+1] = power[freq];
-                powertri[channel][baseidx+2] = power[freq];
-                powertri[channel][baseidx+4] = power[freq];
+            // Copy amplitude values for each trapzeoid/triangle
+            for (unsigned long trap=0; trap<num_trapezoids; trap++) {
+                        
+                vertices[channel][6*trap+1] = power[trap];
+                vertices[channel][6*trap+2] = power[trap+1];                
+                vertices[channel][6*trap+3] = power[trap+1];
+                
             }
             
             // Update the buffer
-            glBindBuffer(GL_ARRAY_BUFFER, VBO[channel]);    
-            glBufferSubData(GL_ARRAY_BUFFER, 0, 6 * freq_draw_len * sizeof(GLfloat), powertri[channel].data() );
+            glBindBuffer(GL_ARRAY_BUFFER, VBO[channel]);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, num_vertices * sizeof(GLfloat), vertices[channel].data() );
             glBindVertexArray( VAO[channel] );
 
             if (channel==0) {
@@ -194,7 +195,7 @@ int main(int argc, char** argv) {
                 main_shader.set_uniform("multiplier", 1.0f);
             }
             
-            glDrawArrays(GL_TRIANGLES, 0, 6*freq_draw_len );
+            glDrawArrays(GL_TRIANGLES, 0, num_vertices );
 
         }
      

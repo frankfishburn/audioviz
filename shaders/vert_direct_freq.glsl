@@ -5,15 +5,16 @@ uniform float multiplier;
 
 void main(void){
  
-    float freq = floor(float(gl_VertexID) / 6.0);
-    float vert = float(gl_VertexID) - 6.0*freq;
-    if (vert==2.0 || vert==4.0 || vert==5.0) {
-        freq += 0.5;
+    float trapezoidID = floor(float(gl_VertexID) / 6.0);
+    float trapvertexID = float(gl_VertexID) - 6.0*trapezoidID;
+
+    if (trapvertexID==0.0 || trapvertexID==1.0 || trapvertexID==4.0) {
+        trapezoidID -= 0.5;
     } else {
-        freq -= 0.5;
+        trapezoidID += 0.5;
     }
     
-    float y_pos = 1.95 * (freq + 0.5 - float(num_freq)/2.0) / float(num_freq);
+    float y_pos = 1.95 * (trapezoidID + 0.5 - float(num_freq)/2.0) / float(num_freq);
     float x_pos = multiplier * 0.99 * min(amplitude,1.0);
     
     gl_Position = vec4( x_pos, y_pos, 0.0, 1.0);
