@@ -88,8 +88,6 @@ int main(int argc, char** argv) {
     // Setup shaders
     ShaderProgram main_shader(vertex_source, fragment_source);
     
-    main_shader.use();
-    
     // Set static uniforms
     main_shader.set_uniform("num_freq",(int)num_frequencies);
     main_shader.set_uniform("resolution",(float) fb.width(), fb.height());
@@ -142,7 +140,6 @@ int main(int argc, char** argv) {
                         fb.freshen();
                         glBindFramebuffer(GL_FRAMEBUFFER, 0);
                         glViewport(0, 0, e.window.data1, e.window.data2);
-                        main_shader.use();
                         main_shader.set_uniform("resolution",(float) fb.width(), fb.height());
                     }
                     break;

@@ -113,6 +113,7 @@ void ShaderProgram::link_shaders() {
 
 void ShaderProgram::set_uniform(const char* name, int value) {
     
+    glUseProgram(program);
     GLint uniform = glGetUniformLocation(program, name);
     glUniform1i(uniform, value);
     
@@ -120,6 +121,7 @@ void ShaderProgram::set_uniform(const char* name, int value) {
 
 void ShaderProgram::set_uniform(const char* name, float value) {
     
+    glUseProgram(program);
     GLint uniform = glGetUniformLocation(program, name);
     glUniform1f(uniform, value);
 
@@ -127,6 +129,7 @@ void ShaderProgram::set_uniform(const char* name, float value) {
 
 void ShaderProgram::set_uniform(const char* name, float value1, float value2) {
     
+    glUseProgram(program);
     GLint uniform = glGetUniformLocation(program, name);
     glUniform2f(uniform, value1, value2);
 
@@ -134,6 +137,7 @@ void ShaderProgram::set_uniform(const char* name, float value1, float value2) {
 
 void ShaderProgram::set_uniform(const char* name, float value1, float value2, float value3) {
 
+    glUseProgram(program);
     GLint uniform = glGetUniformLocation(program, name);
     glUniform3f(uniform, value1, value2, value3);
 
@@ -141,6 +145,7 @@ void ShaderProgram::set_uniform(const char* name, float value1, float value2, fl
 
 void ShaderProgram::set_attrib(const char* name, size_t size) {
     
+    glUseProgram(program);
     GLint attrib = glGetAttribLocation(program, name);
     glEnableVertexAttribArray(attrib);
     glVertexAttribPointer(attrib, 1, GL_FLOAT, GL_FALSE, size, 0 );
