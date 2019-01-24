@@ -82,6 +82,9 @@ int main(int argc, char** argv) {
     // Initialize window and context
     Window wnd;
     
+    // Create a framebuffer
+    FrameBuffer fb(&wnd);
+    
     // Setup shaders
     ShaderProgram main_shader(vertex_source, fragment_source);
     
@@ -89,10 +92,7 @@ int main(int argc, char** argv) {
     
     // Set static uniforms
     main_shader.set_uniform("num_freq",(int)num_frequencies);
-    
-    int viewport[4];
-    glGetIntegerv(GL_VIEWPORT,viewport);
-    main_shader.set_uniform("resolution",(float)viewport[2],(float)viewport[3]);
+    main_shader.set_uniform("resolution",(float) fb.width(), fb.height());
     
     // Set up vertex buffer/array object for each channel
     GLuint VBO[num_channels];
@@ -110,9 +110,6 @@ int main(int argc, char** argv) {
         main_shader.set_attrib("amplitude",sizeof(float));
         
     }
-    
-    // Create a framebuffer
-    FrameBuffer fb(&wnd);
     
     // Enable v-sync
     SDL_GL_SetSwapInterval(1);
@@ -145,9 +142,8 @@ int main(int argc, char** argv) {
                         fb.freshen();
                         glBindFramebuffer(GL_FRAMEBUFFER, 0);
                         glViewport(0, 0, e.window.data1, e.window.data2);
-                        glGetIntegerv(GL_VIEWPORT,viewport);
                         main_shader.use();
-                        main_shader.set_uniform("resolution",(float)viewport[2],(float)viewport[3]);
+                        main_shader.set_uniform("resolution",(float) fb.width(), fb.height());
                     }
                     break;
                 

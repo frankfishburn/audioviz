@@ -33,13 +33,13 @@ void FrameBuffer::init(){
     glBindFramebuffer(GL_FRAMEBUFFER, buffer);
     
     // Get window size
-    int width, height;
-    window->get_window_size(&width,&height);
+    width_ = window->width();
+    height_ = window->height();
     
     // Create the texture
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,  width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,  width_, height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
@@ -97,6 +97,7 @@ void FrameBuffer::bind() {
     
     // Bind FrameBuffer render target
     glBindFramebuffer(GL_FRAMEBUFFER, buffer);
+    glViewport(0,0,width_,height_);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     
@@ -106,6 +107,7 @@ void FrameBuffer::unbind() {
     
     // Unbind FrameBuffer render target
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0,0,window->width(),window->height());
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 

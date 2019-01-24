@@ -10,7 +10,8 @@ public:
     ~Window();
     void check_errors();
     void swap();
-    void get_window_size(int* width, int* height);
+    int width();
+    int height();
     
 private:
     int status;

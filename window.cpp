@@ -24,7 +24,9 @@ Window::Window() {
     context = SDL_GL_CreateContext(window);
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
-        
+    
+    glViewport(0,0,640,480);
+    
 }
 
 Window::~Window() {
@@ -41,8 +43,16 @@ void Window::swap() {
     SDL_GL_SwapWindow(window);
 }
 
-void Window::get_window_size(int* width, int* height) {
-    SDL_GetWindowSize(window, width, height);
+int Window::width() {
+    int width;
+    SDL_GetWindowSize(window, &width, NULL);
+    return width;
+}
+
+int Window::height() {
+    int height;
+    SDL_GetWindowSize(window, NULL, &height);
+    return height;
 }
 
 void Window::check_errors(){
