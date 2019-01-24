@@ -104,7 +104,7 @@ void STFT::analyze() {
             
             // Get maximum power
             for (unsigned long time=0; time<time_len; time++)
-                for (unsigned long freq=0; freq<out_freq_len; freq++)
+                for (int freq=0; freq<out_freq_len; freq++)
                     tmpmaxpower = std::max( tmpmaxpower , out_power[channel][time*freq_len + freq] );
             
         }

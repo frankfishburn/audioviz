@@ -123,7 +123,10 @@ int main(int argc, char** argv) {
     
     // Start audio
     audio.play();
-    
+    double start_time = 0;
+    double current_time = 0;
+    unsigned long frame_count = 0;
+         
     // Render Loop
     bool quit=false;
     while (!quit) {
@@ -196,10 +199,24 @@ int main(int argc, char** argv) {
         fb.draw();
         wnd.swap();
     
+        // Display framerate info
+        if (audio.is_playing()) {
+            frame_count++;
+            current_time = audio.get_current_time();
+            if ((current_time-start_time)>=2) {
+                
+                printf("\rfps: %4.4f",frame_count/(current_time-start_time));
+                fflush(stdout);
+                frame_count = 0;
+                start_time = current_time;
+            }
+        }
+
     };
     
     // Cleanup
     audio.pause();
+    printf("\r\n");
     
     return 0;
 }
