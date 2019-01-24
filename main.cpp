@@ -69,9 +69,7 @@ int main(int argc, char** argv) {
     
     // Get number of frequencies
     const unsigned long num_frequencies = stft.maxGoodFreq();
-    const unsigned long num_trapezoids = num_frequencies - 1;
-    const unsigned long num_triangles = 2 * num_trapezoids;
-    const unsigned long num_vertices = 3 * num_triangles;
+    const unsigned long num_vertices = 2 * num_frequencies;
     
     // Allocate vertex vector
     std::vector<std::vector<float>> vertices(num_channels);
@@ -171,13 +169,9 @@ int main(int argc, char** argv) {
             stft.compute( channel, current_sample );
             float* power = stft.getPowerPtr( channel );
             
-            // Copy amplitude values for each trapzeoid/triangle
-            for (unsigned long trap=0; trap<num_trapezoids; trap++) {
-                        
-                vertices[channel][6*trap+1] = power[trap];
-                vertices[channel][6*trap+2] = power[trap+1];                
-                vertices[channel][6*trap+3] = power[trap+1];
-                
+            // Copy amplitude values for each frequency
+            for (unsigned long freq=0; freq<num_frequencies; freq++) {
+                vertices[channel][2*freq+1] = power[freq];
             }
             
             // Update the buffer
@@ -191,7 +185,7 @@ int main(int argc, char** argv) {
                 main_shader.set_uniform("multiplier", 1.0f);
             }
             
-            glDrawArrays(GL_TRIANGLES, 0, num_vertices );
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, num_vertices );
 
         }
      
