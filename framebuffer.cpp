@@ -27,21 +27,23 @@ FrameBuffer::~FrameBuffer() {
 }
 
 void FrameBuffer::init(){
+        
+    // Get window size
+    width_ = 5 * window->width();
+    height_ = 5 * window->height();
+        
+    // Create the texture
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, width_, height_);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     
     // Create a FrameBuffer
     glGenFramebuffers(1, &buffer);
     glBindFramebuffer(GL_FRAMEBUFFER, buffer);
-    
-    // Get window size
-    width_ = window->width();
-    height_ = window->height();
-    
-    // Create the texture
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,  width_, height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
     
     // Check FrameBuffer
@@ -56,6 +58,7 @@ void FrameBuffer::init(){
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
+    /*
     const float screenVertices[32] = {
         -1.0f,  1.0f,  0.0f, 1.0f,
         -1.0f, -1.0f,  0.0f, 0.0f,
@@ -76,6 +79,7 @@ void FrameBuffer::init(){
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+     */
     
 }
 
@@ -116,10 +120,15 @@ void FrameBuffer::unbind() {
 void FrameBuffer::draw() {
     
     // Render offscreen buffer to screen
-    shader->use();
-    glBindVertexArray(VAO);
-    glDisable(GL_DEPTH_TEST);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, buffer);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBlitFramebuffer(0,0,width_,height_,0,0,window->width(),window->height(),GL_COLOR_BUFFER_BIT,GL_LINEAR);
+    
+    // Don't need any of this right now since no overlay/postprocessing effects yet
+    //shader->use();
+    //glBindVertexArray(VAO);
+    //glDisable(GL_DEPTH_TEST);
+    //glBindTexture(GL_TEXTURE_2D, texture);
+    //glDrawArrays(GL_TRIANGLES, 0, 6);
     
 }

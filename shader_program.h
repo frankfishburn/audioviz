@@ -2,7 +2,7 @@
 #define SHADER_PROGRAM_H
 
 #include <cstddef>
-#include <GLES3/gl3.h>
+#include <GLES3/gl32.h>
 
 class ShaderProgram {
 public:

@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
     
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, num_vertices * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, num_vertices * sizeof(GLfloat), NULL, GL_DYNAMIC_DRAW);
         
     glBindVertexArray( VAO );
     main_shader.set_attrib("amplitude",sizeof(float));
