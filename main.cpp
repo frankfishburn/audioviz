@@ -69,13 +69,10 @@ int main(int argc, char** argv) {
     
     // Get number of frequencies
     const unsigned long num_frequencies = stft.maxGoodFreq();
-    const unsigned long num_vertices = 2 * num_frequencies;
+    const unsigned long num_vertices = 4 * num_frequencies;
     
     // Allocate vertex vector
-    std::vector<std::vector<float>> vertices(num_channels);
-    for (int i=0; i<num_channels; i++) {
-        vertices[i] = std::vector<float>(num_vertices);
-    }
+    std::vector<float> vertices(num_vertices);
         
     // Initialize window and context
     Window wnd;
@@ -91,21 +88,16 @@ int main(int argc, char** argv) {
     main_shader.set_uniform("resolution",(float) fb.width(), fb.height());
     
     // Set up vertex buffer/array object for each channel
-    GLuint VBO[num_channels];
-    GLuint VAO[num_channels];
-    glGenVertexArrays(num_channels, VAO );
+    GLuint VBO;
+    GLuint VAO;
+    glGenVertexArrays(1, &VAO );
     
-    for (int channel=0; channel<num_channels; channel++) {
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, num_vertices * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
         
-        glGenBuffers(1, &VBO[channel]);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO[channel]);
-        glBufferData(GL_ARRAY_BUFFER, num_vertices * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
-        
-        glBindVertexArray( VAO[channel] );
-        
-        main_shader.set_attrib("amplitude",sizeof(float));
-        
-    }
+    glBindVertexArray( VAO );
+    main_shader.set_attrib("amplitude",sizeof(float));
     
     // Enable v-sync
     SDL_GL_SetSwapInterval(1);
@@ -162,37 +154,43 @@ int main(int argc, char** argv) {
         
         // Update current time
         long current_sample = audio.get_current_sample();
-        
-        // Render each channel
-        for (int channel=0; channel<num_channels; channel++){
-        
-            stft.compute( channel, current_sample );
-            float* power = stft.getPowerPtr( channel );
-            
-            // Copy amplitude values for each frequency
-            for (unsigned long freq=0; freq<num_frequencies; freq++) {
-                vertices[channel][2*freq+1] = power[freq];
-            }
-            
-            // Update the buffer
-            glBindBuffer(GL_ARRAY_BUFFER, VBO[channel]);
-            glBufferSubData(GL_ARRAY_BUFFER, 0, num_vertices * sizeof(GLfloat), vertices[channel].data() );
-            glBindVertexArray( VAO[channel] );
 
-            if (channel==0) {
-                main_shader.set_uniform("multiplier", -1.0f);
-            } else {
-                main_shader.set_uniform("multiplier", 1.0f);
-            }
+        float* power_left;
+        float* power_right;
+        
+        stft.compute( 0, current_sample );
+        power_left = stft.getPowerPtr(0);
+        
+        if (num_channels == 1) {
+            // Mono
+            power_right = power_left;
             
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, num_vertices );
-
+        } else {
+            // Stereo
+            stft.compute( 1, current_sample );
+            power_right = stft.getPowerPtr(1);
         }
-     
+        
+        // Copy left channel power spectrum into vertex buffer
+        for (unsigned long freq=0; freq<num_frequencies; freq++) {
+            vertices[2*freq+1] = -power_left[freq];
+        }
+        
+        // Copy right channel power spectrum into vertex buffer
+        for (unsigned long freq=0; freq<num_frequencies; freq++) {
+            vertices[num_vertices - 2*freq] = power_right[freq];
+        }
+        
+        // Update the buffer
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, num_vertices * sizeof(GLfloat), vertices.data() );
+        glBindVertexArray( VAO );
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, num_vertices );
+        
         fb.unbind();
         fb.draw();
         wnd.swap();
-    
+        
         // Display framerate info
         if (audio.is_playing()) {
             frame_count++;
@@ -206,7 +204,7 @@ int main(int argc, char** argv) {
             }
         }
 
-    };
+    }
     
     // Cleanup
     audio.pause();
