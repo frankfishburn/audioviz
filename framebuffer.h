@@ -19,8 +19,7 @@ private:
     Window* window;
     GLuint buffer;
     GLuint texture;
-    GLuint VAO;
-    GLuint VBO;
+    
     ShaderProgram *shader;
     void init();
     void deinit();

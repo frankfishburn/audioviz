@@ -55,32 +55,11 @@ void FrameBuffer::init(){
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    
-    // Setup FB triangles
-    const float screenVertices[12] = {
-        -1.0f,  1.0f,
-        -1.0f, -1.0f,
-         1.0f, -1.0f,
 
-        -1.0f,  1.0f,
-         1.0f, -1.0f,
-         1.0f,  1.0f
-    };
-    
-    // screen quad VAO
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(screenVertices), &screenVertices, GL_STATIC_DRAW);
-    shader->set_attrib("position", 2, 2*sizeof(float), 0);
-    
 }
 
 void FrameBuffer::deinit() {
     
-    glDeleteBuffers(1, &VBO);
-    glDeleteVertexArrays(1, &VAO);
     glDeleteTextures(1, &texture);
     glDeleteFramebuffers(1, &buffer);
     
@@ -115,8 +94,8 @@ void FrameBuffer::draw() {
     
     // Render offscreen buffer to screen
     shader->use();
-    glBindVertexArray(VAO);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    
     
 }
