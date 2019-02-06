@@ -36,6 +36,7 @@ public:
     std::string get_album() {return album;};
     std::string get_title() {return title;};
     std::string get_year() {return year;};
+    void print();
     
 private:
     

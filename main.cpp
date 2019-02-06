@@ -36,20 +36,7 @@ int main(int argc, char** argv) {
         return 1;
     }
     
-    // Print metadata
-    if (!audio.get_title().empty()) {
-        printf("Playing \"%s\"",audio.get_title().c_str());
-        if (!audio.get_artist().empty()) {
-            printf(" by \"%s\"",audio.get_artist().c_str());
-        }
-        if (!audio.get_album().empty()) {
-            printf(" on \"%s\"",audio.get_album().c_str());
-        }
-        if (!audio.get_year().empty()) {
-            printf(" (%s)",audio.get_year().c_str());
-        }
-    }
-    printf("\n");
+    audio.print();
             
     const int num_channels = audio.get_num_channels();
     

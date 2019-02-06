@@ -358,3 +358,20 @@ void audio_manager::forward() {
     play();
     
 }
+
+void audio_manager::print() {
+    
+    if (!get_title().empty()) {
+        printf("Playing \"%s\"",get_title().c_str());
+        if (!get_artist().empty()) {
+            printf(" by \"%s\"",get_artist().c_str());
+        }
+        if (!get_album().empty()) {
+            printf(" on \"%s\"",get_album().c_str());
+        }
+        if (!get_year().empty()) {
+            printf(" (%s)",get_year().c_str());
+        }
+    }
+    printf("\n");
+}
