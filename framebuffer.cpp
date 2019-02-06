@@ -29,22 +29,18 @@ FrameBuffer::~FrameBuffer() {
 void FrameBuffer::init(){
         
     // Get window size
-    width_ = 5 * window->width();
-    height_ = 5 * window->height();
-        
+    width_ = window->width();
+    height_ = window->height();
+    
     // Create the texture
     glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, width_, height_);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 1);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 1);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture);
+    glTexStorage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 5, GL_RGBA8, width_, height_, GL_FALSE);
     
     // Create a FrameBuffer
     glGenFramebuffers(1, &buffer);
     glBindFramebuffer(GL_FRAMEBUFFER, buffer);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, texture, 0);
     
     // Check FrameBuffer
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER) ;
