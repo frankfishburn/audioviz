@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
     glBufferData(GL_ARRAY_BUFFER, num_vertices * sizeof(GLfloat), NULL, GL_DYNAMIC_DRAW);
         
     glBindVertexArray( VAO );
-    main_shader.set_attrib("amplitude",sizeof(float));
+    main_shader.set_attrib("amplitude", 1);
     
     // Enable v-sync
     SDL_GL_SetSwapInterval(1);

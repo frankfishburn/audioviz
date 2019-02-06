@@ -13,12 +13,16 @@ public:
     bool isok();
     void use();
     void print_errors();
+    GLuint get_program(){return program;}
     
     void set_uniform(const char*, int);
     void set_uniform(const char*, float);
     void set_uniform(const char*, float, float);
     void set_uniform(const char*, float, float, float);
-    void set_attrib(const char*, size_t);
+    void set_attrib(const char*, int N, size_t stride, size_t offset);
+    void set_attrib(const char*, int N, size_t stride);
+    void set_attrib(const char*, int N);
+    void set_attrib(const char*);
     
 private:
     
