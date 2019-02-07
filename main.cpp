@@ -104,6 +104,7 @@ int main(int argc, char** argv) {
     double current_time = 0;
     std::string current_time_str;
     unsigned long frame_count = 0;
+    bool force_refresh = true;
          
     // Render Loop
     bool quit=false;
@@ -128,8 +129,8 @@ int main(int argc, char** argv) {
                 case SDL_KEYDOWN:
                     switch (e.key.keysym.sym) {
                         case SDLK_SPACE: audio.toggle_playback(); break;
-                        case SDLK_LEFT: audio.back(); break;
-                        case SDLK_RIGHT: audio.forward(); break;
+                        case SDLK_LEFT: audio.back(); start_time=audio.get_current_time(); frame_count=0; force_refresh=true; break;
+                        case SDLK_RIGHT: audio.forward(); start_time=audio.get_current_time(); frame_count=0; force_refresh=true; break;
                         case SDLK_ESCAPE: quit=true; break;
                     }
                     break;
@@ -184,12 +185,13 @@ int main(int argc, char** argv) {
             frame_count++;
             current_time = audio.get_current_time();
             current_time_str = audio.get_current_time_str();
-            if ((current_time-start_time)>=2) {
+            if ((current_time-start_time)>=2 || force_refresh) {
                 
                 printf("\r%s (fps: %4.4f)",current_time_str.c_str(),frame_count/(current_time-start_time));
                 fflush(stdout);
                 frame_count = 0;
                 start_time = current_time;
+                force_refresh = false;
             }
         }
 
