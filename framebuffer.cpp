@@ -1,16 +1,16 @@
 #include "framebuffer.h"
 
-const char *vertex_tex_source = 
-#include "shaders/vert_tex.glsl"
+const char *src_copy_vert = 
+#include "shaders/copy_vert.glsl"
 ;
-const char *fragment_tex_source = 
-#include "shaders/frag_tex.glsl"
+const char *src_copy_frag = 
+#include "shaders/copy_frag.glsl"
 ;
-const char *hblur_fragment_source = 
-#include "shaders/blur_horizontal.glsl"
+const char *src_blurh_frag = 
+#include "shaders/blurh_frag.glsl"
 ;
-const char *vblur_fragment_source = 
-#include "shaders/blur_vertical.glsl"
+const char *src_blurv_frag = 
+#include "shaders/blurv_frag.glsl"
 ;
 
 FrameBuffer::FrameBuffer(Window* wnd) {
@@ -18,13 +18,13 @@ FrameBuffer::FrameBuffer(Window* wnd) {
     window = wnd;
     
     // Setup copy shader
-    copy_shader = new ShaderProgram(vertex_tex_source, fragment_tex_source);
+    copy_shader = new ShaderProgram(src_copy_vert, src_copy_frag);
     
     // Setup horizontal and vertical blur shaders
-    hblur_shader = new ShaderProgram(vertex_tex_source, hblur_fragment_source);
+    hblur_shader = new ShaderProgram(src_copy_vert, src_blurh_frag);
     hblur_shader->set_uniform("blur_radius",1.0f);
     
-    vblur_shader = new ShaderProgram(vertex_tex_source, vblur_fragment_source);
+    vblur_shader = new ShaderProgram(src_copy_vert, src_blurv_frag);
     vblur_shader->set_uniform("blur_radius",1.0f);
     
     // Initialize framebuffer
