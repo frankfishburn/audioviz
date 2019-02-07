@@ -12,11 +12,11 @@
 #include "stft.h"
 #include "window.h"
 
-const char *vertex_source = 
-#include "shaders/vert_direct_freq.glsl"
+const char *src_render_vert = 
+#include "shaders/render_vert.glsl"
 ;
-const char *fragment_source = 
-#include "shaders/frag_plain.glsl"
+const char *src_render_frag = 
+#include "shaders/render_frag.glsl"
 ;
 
 using namespace std;
@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
     FrameBuffer fb(&wnd);
     
     // Setup shaders
-    ShaderProgram main_shader(vertex_source, fragment_source);
+    ShaderProgram main_shader(src_render_vert, src_render_frag);
     
     // Set static uniforms
     main_shader.set_uniform("num_freq",(int)num_frequencies);
@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
     glBufferData(GL_ARRAY_BUFFER, num_vertices * sizeof(GLfloat), NULL, GL_DYNAMIC_DRAW);
         
     glBindVertexArray( VAO );
-    main_shader.set_attrib("amplitude",sizeof(float));
+    main_shader.set_attrib("amplitude", 1);
     
     // Enable v-sync
     SDL_GL_SetSwapInterval(1);

@@ -16,14 +16,17 @@ public:
     int height() {return height_;}
     
 private:
+    const int num_samples = 5;
     Window* window;
-    GLuint buffer;
-    GLuint texture;
-    GLuint VAO;
-    GLuint VBO;
-    ShaderProgram *shader;
+    GLuint buffer[3];
+    GLuint texture[3];
+    
+    ShaderProgram *copy_shader;
+    ShaderProgram *hblur_shader;
+    ShaderProgram *vblur_shader;
     void init();
     void deinit();
+    void apply_bloom();
     int width_;
     int height_;
 };

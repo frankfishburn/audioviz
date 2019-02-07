@@ -1,19 +1,34 @@
 #include "framebuffer.h"
 
-const char *vertex_tex_source = 
-#include "shaders/vert_tex.glsl"
+const char *src_copy_vert = 
+#include "shaders/copy_vert.glsl"
 ;
-const char *fragment_tex_source = 
-#include "shaders/frag_tex.glsl"
+const char *src_copy_frag = 
+#include "shaders/copy_frag.glsl"
+;
+const char *src_blurh_frag = 
+#include "shaders/blurh_frag.glsl"
+;
+const char *src_blurv_frag = 
+#include "shaders/blurv_frag.glsl"
 ;
 
 FrameBuffer::FrameBuffer(Window* wnd) {
 
-    // Compile/link shader
-    shader = new ShaderProgram(vertex_tex_source, fragment_tex_source);
+    window = wnd;
+    
+    // Setup copy shader
+    copy_shader = new ShaderProgram(src_copy_vert, src_copy_frag);
+    copy_shader->set_uniform("num_samples",num_samples);
+    
+    // Setup horizontal and vertical blur shaders
+    hblur_shader = new ShaderProgram(src_copy_vert, src_blurh_frag);
+    hblur_shader->set_uniform("num_samples",num_samples);
+    
+    vblur_shader = new ShaderProgram(src_copy_vert, src_blurv_frag);
+    vblur_shader->set_uniform("num_samples",num_samples);
     
     // Initialize framebuffer
-    window = wnd;
     init();
     
 }
@@ -22,7 +37,9 @@ FrameBuffer::FrameBuffer(Window* wnd) {
 FrameBuffer::~FrameBuffer() {
 
     deinit();
-    delete shader;
+    delete copy_shader;
+    delete hblur_shader;
+    delete vblur_shader;
     
 }
 
@@ -31,60 +48,42 @@ void FrameBuffer::init(){
     // Get window size
     width_ = window->width();
     height_ = window->height();
+    GLenum status;
     
-    // Create the texture
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture);
-    glTexStorage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 5, GL_RGBA8, width_, height_, GL_FALSE);
-    
-    // Create a FrameBuffer
-    glGenFramebuffers(1, &buffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, buffer);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, texture, 0);
-    
-    // Check FrameBuffer
-    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER) ;
-    if(status != GL_FRAMEBUFFER_COMPLETE) {
-        fprintf(stderr,"GL FrameBuffer Error! %u\n",status);
-        return;
+    // Create 2 textures and framebuffers
+    for (int i=0; i<3; i++) {
+        
+        // Create a FrameBuffer
+        glGenFramebuffers(1, &buffer[i]);
+        glBindFramebuffer(GL_FRAMEBUFFER, buffer[i]);
+
+        // Create the texture
+        glGenTextures(1, &texture[i]);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture[i]);
+        glTexStorage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, num_samples, GL_RGBA8,  width_, height_, GL_FALSE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, texture[i], 0);
+
+        // Check FrameBuffer
+        status = glCheckFramebufferStatus(GL_FRAMEBUFFER) ;
+        if(status != GL_FRAMEBUFFER_COMPLETE) {
+            fprintf(stderr,"GL FrameBuffer Error! %u\n",status);
+            return;
+        }
     }
     
     // Reset buffers
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    
-    /*
-    const float screenVertices[32] = {
-        -1.0f,  1.0f,  0.0f, 1.0f,
-        -1.0f, -1.0f,  0.0f, 0.0f,
-         1.0f, -1.0f,  1.0f, 0.0f,
 
-        -1.0f,  1.0f,  0.0f, 1.0f,
-         1.0f, -1.0f,  1.0f, 0.0f,
-         1.0f,  1.0f,  1.0f, 1.0f
-    };
-    
-    // screen quad VAO
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(screenVertices), &screenVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-     */
-    
 }
 
 void FrameBuffer::deinit() {
     
-    glDeleteBuffers(1, &VBO);
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteTextures(1, &texture);
-    glDeleteFramebuffers(1, &buffer);
+    glDeleteTextures(1, &texture[0]);
+    glDeleteTextures(1, &texture[1]);
+    glDeleteFramebuffers(1, &buffer[0]);
+    glDeleteFramebuffers(1, &buffer[1]);
     
 }
 
@@ -96,7 +95,7 @@ void FrameBuffer::freshen() {
 void FrameBuffer::bind() {
     
     // Bind FrameBuffer render target
-    glBindFramebuffer(GL_FRAMEBUFFER, buffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, buffer[0]);
     glViewport(0,0,width_,height_);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -115,16 +114,47 @@ void FrameBuffer::unbind() {
 
 void FrameBuffer::draw() {
     
+    apply_bloom();
+    
     // Render offscreen buffer to screen
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, buffer);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, buffer[0]);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glBlitFramebuffer(0,0,width_,height_,0,0,window->width(),window->height(),GL_COLOR_BUFFER_BIT,GL_LINEAR);
     
-    // Don't need any of this right now since no overlay/postprocessing effects yet
-    //shader->use();
-    //glBindVertexArray(VAO);
-    //glDisable(GL_DEPTH_TEST);
-    //glBindTexture(GL_TEXTURE_2D, texture);
-    //glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
+void FrameBuffer::apply_bloom() {
+    
+    // 1) texture 0 -> horizontal blur -> buffer 1
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, buffer[1]);
+    glViewport(0,0,width_,height_);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    
+    hblur_shader->use();
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture[0]);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    
+    // 2) texture 1 -> vertical blur -> buffer 2
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, buffer[2]);
+    glViewport(0,0,width_,height_);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    vblur_shader->use();
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture[1]);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+    // 3) texture 2 -> blend -> buffer 0
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, buffer[0]);
+    glViewport(0,0,width_,height_);
+    glEnablei(buffer[0],GL_BLEND); // Blend the blurred result with the original data (maximum value)
+    glBlendEquationi(buffer[0],GL_MAX);
+
+    copy_shader->use();
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture[2]);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    
+    unbind();
     
 }

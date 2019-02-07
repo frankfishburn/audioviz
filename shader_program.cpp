@@ -143,12 +143,24 @@ void ShaderProgram::set_uniform(const char* name, float value1, float value2, fl
 
 }
 
-void ShaderProgram::set_attrib(const char* name, size_t size) {
+void ShaderProgram::set_attrib(const char* name) {
+    set_attrib(name, 1, 0, 0);
+}
+
+void ShaderProgram::set_attrib(const char* name, int N) {
+    set_attrib(name, N, N*sizeof(float), 0);
+}
+
+void ShaderProgram::set_attrib(const char* name, int N, size_t stride) {
+    set_attrib(name,N,stride,0);
+}
+
+void ShaderProgram::set_attrib(const char* name, int N, size_t stride, size_t offset) {
     
     glUseProgram(program);
     GLint attrib = glGetAttribLocation(program, name);
     glEnableVertexAttribArray(attrib);
-    glVertexAttribPointer(attrib, 1, GL_FLOAT, GL_FALSE, size, 0 );
+    glVertexAttribPointer(attrib, N, GL_FLOAT, GL_FALSE, stride, (void*)offset );
     
 }
 
