@@ -290,6 +290,29 @@ double audio_manager::get_current_time() {
     
 }
 
+std::string audio_manager::get_current_time_str() {
+    
+    double seconds = get_current_time();
+    
+    int hours = floor(seconds/3600);
+    seconds -= hours*3600;
+    
+    int minutes = floor(seconds/60);
+    seconds -= minutes*60;
+    
+    //std::string result;
+    
+    char buf[12];
+    if (hours == 0) {
+        snprintf(buf, sizeof(buf), "%i:%02i", minutes, (int) seconds);
+    } else {
+        snprintf(buf, sizeof(buf), "%i:%02i:%02i", hours, minutes, (int) seconds );
+    }
+    
+    return std::string(buf);
+    
+}
+
 void audio_manager::play() {
     
     if (!isPlaying) {

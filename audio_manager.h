@@ -24,6 +24,7 @@ public:
     bool is_playing() {return isPlaying;};
     unsigned long get_current_sample();
     double get_current_time();
+    std::string get_current_time_str();
     
     // Query audio file properties
     unsigned long get_num_channels() {return num_channels;};

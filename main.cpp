@@ -102,6 +102,7 @@ int main(int argc, char** argv) {
     audio.play();
     double start_time = 0;
     double current_time = 0;
+    std::string current_time_str;
     unsigned long frame_count = 0;
          
     // Render Loop
@@ -182,9 +183,10 @@ int main(int argc, char** argv) {
         if (audio.is_playing()) {
             frame_count++;
             current_time = audio.get_current_time();
+            current_time_str = audio.get_current_time_str();
             if ((current_time-start_time)>=2) {
                 
-                printf("\rfps: %4.4f",frame_count/(current_time-start_time));
+                printf("\r%s (fps: %4.4f)",current_time_str.c_str(),frame_count/(current_time-start_time));
                 fflush(stdout);
                 frame_count = 0;
                 start_time = current_time;
