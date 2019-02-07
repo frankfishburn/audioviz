@@ -17,12 +17,15 @@ public:
     
 private:
     Window* window;
-    GLuint buffer;
-    GLuint texture;
+    GLuint buffer[2];
+    GLuint texture[2];
     
-    ShaderProgram *shader;
+    ShaderProgram *copy_shader;
+    ShaderProgram *hblur_shader;
+    ShaderProgram *vblur_shader;
     void init();
     void deinit();
+    void apply_bloom();
     int width_;
     int height_;
 };
