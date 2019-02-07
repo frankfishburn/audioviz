@@ -51,7 +51,7 @@ void FrameBuffer::init(){
     GLenum status;
     
     // Create 2 textures and framebuffers
-    for (int i=0; i<2; i++) {
+    for (int i=0; i<3; i++) {
         
         // Create a FrameBuffer
         glGenFramebuffers(1, &buffer[i]);
@@ -125,26 +125,34 @@ void FrameBuffer::draw() {
 
 void FrameBuffer::apply_bloom() {
     
-    // Bind second buffer as render target
+    // 1) texture 0 -> horizontal blur -> buffer 1
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, buffer[1]);
     glViewport(0,0,width_,height_);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     
-    // Apply horizontal blur to original data
     hblur_shader->use();
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture[0]);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     
-    // Bind first buffer as render target
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, buffer[0]);
+    // 2) texture 1 -> vertical blur -> buffer 2
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, buffer[2]);
     glViewport(0,0,width_,height_);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Apply vertical blur to horizontally-blurred data
     vblur_shader->use();
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture[1]);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+    // 3) texture 2 -> blend -> buffer 0
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, buffer[0]);
+    glViewport(0,0,width_,height_);
+    glEnablei(buffer[0],GL_BLEND); // Blend the blurred result with the original data (maximum value)
+    glBlendEquationi(buffer[0],GL_MAX);
+
+    copy_shader->use();
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture[2]);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     
     unbind();

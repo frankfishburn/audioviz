@@ -18,8 +18,8 @@ public:
 private:
     const int num_samples = 5;
     Window* window;
-    GLuint buffer[2];
-    GLuint texture[2];
+    GLuint buffer[3];
+    GLuint texture[3];
     
     ShaderProgram *copy_shader;
     ShaderProgram *hblur_shader;
