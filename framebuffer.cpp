@@ -23,10 +23,10 @@ FrameBuffer::FrameBuffer(Window* wnd) {
     
     // Setup horizontal and vertical blur shaders
     hblur_shader = new ShaderProgram(src_copy_vert, src_blurh_frag);
-    hblur_shader->set_uniform("blur_radius",1.0f);
+    hblur_shader->set_uniform("num_samples",num_samples);
     
     vblur_shader = new ShaderProgram(src_copy_vert, src_blurv_frag);
-    vblur_shader->set_uniform("blur_radius",1.0f);
+    vblur_shader->set_uniform("num_samples",num_samples);
     
     // Initialize framebuffer
     init();
@@ -132,7 +132,7 @@ void FrameBuffer::apply_bloom() {
     glClear(GL_COLOR_BUFFER_BIT);
     
     // Apply horizontal blur to original data
-    copy_shader->use();
+    hblur_shader->use();
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture[0]);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     
@@ -143,7 +143,7 @@ void FrameBuffer::apply_bloom() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Apply vertical blur to horizontally-blurred data
-    copy_shader->use();
+    vblur_shader->use();
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture[1]);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     
