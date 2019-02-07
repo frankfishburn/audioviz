@@ -19,6 +19,7 @@ FrameBuffer::FrameBuffer(Window* wnd) {
     
     // Setup copy shader
     copy_shader = new ShaderProgram(src_copy_vert, src_copy_frag);
+    copy_shader->set_uniform("num_samples",num_samples);
     
     // Setup horizontal and vertical blur shaders
     hblur_shader = new ShaderProgram(src_copy_vert, src_blurh_frag);
@@ -58,11 +59,9 @@ void FrameBuffer::init(){
 
         // Create the texture
         glGenTextures(1, &texture[i]);
-        glBindTexture(GL_TEXTURE_2D, texture[i]);
-        glTexStorage2D(GL_TEXTURE_2D, 5, GL_RGBA8,  width_, height_);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); 
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture[i], 0);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture[i]);
+        glTexStorage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, num_samples, GL_RGBA8,  width_, height_, GL_FALSE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, texture[i], 0);
 
         // Check FrameBuffer
         status = glCheckFramebufferStatus(GL_FRAMEBUFFER) ;
@@ -118,9 +117,9 @@ void FrameBuffer::draw() {
     apply_bloom();
     
     // Render offscreen buffer to screen
-    copy_shader->use();
-    glBindTexture(GL_TEXTURE_2D, texture[0]);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, buffer[0]);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBlitFramebuffer(0,0,width_,height_,0,0,window->width(),window->height(),GL_COLOR_BUFFER_BIT,GL_LINEAR);
     
 }
 
@@ -133,8 +132,8 @@ void FrameBuffer::apply_bloom() {
     glClear(GL_COLOR_BUFFER_BIT);
     
     // Apply horizontal blur to original data
-    hblur_shader->use();
-    glBindTexture(GL_TEXTURE_2D, texture[0]);
+    copy_shader->use();
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture[0]);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     
     // Bind first buffer as render target
@@ -144,8 +143,8 @@ void FrameBuffer::apply_bloom() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Apply vertical blur to horizontally-blurred data
-    vblur_shader->use();
-    glBindTexture(GL_TEXTURE_2D, texture[1]);
+    copy_shader->use();
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture[1]);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     
     unbind();
