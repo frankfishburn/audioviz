@@ -16,7 +16,8 @@ public:
     int height() {return height_;}
     
 private:
-    const int num_samples = 5;
+    const int num_samples = 1;
+    GLenum GL_TEXTURE_TYPE;
     Window* window;
     GLuint buffer[3];
     GLuint texture[3];

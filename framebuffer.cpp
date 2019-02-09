@@ -3,30 +3,57 @@
 const char *src_copy_vert = 
 #include "shaders/copy_vert.glsl"
 ;
-const char *src_copy_frag = 
-#include "shaders/copy_frag.glsl"
+const char *src_copy_frag_noMSAA = 
+#include "shaders/copy_frag_noMSAA.glsl"
 ;
-const char *src_blurh_frag = 
-#include "shaders/blurh_frag.glsl"
+const char *src_blurh_frag_noMSAA = 
+#include "shaders/blurh_frag_noMSAA.glsl"
 ;
-const char *src_blurv_frag = 
-#include "shaders/blurv_frag.glsl"
+const char *src_blurv_frag_noMSAA = 
+#include "shaders/blurv_frag_noMSAA.glsl"
+;
+
+const char *src_copy_frag_MSAA = 
+#include "shaders/copy_frag_MSAA.glsl"
+;
+const char *src_blurh_frag_MSAA = 
+#include "shaders/blurh_frag_MSAA.glsl"
+;
+const char *src_blurv_frag_MSAA = 
+#include "shaders/blurv_frag_MSAA.glsl"
 ;
 
 FrameBuffer::FrameBuffer(Window* wnd) {
 
     window = wnd;
     
-    // Setup copy shader
-    copy_shader = new ShaderProgram(src_copy_vert, src_copy_frag);
-    copy_shader->set_uniform("num_samples",num_samples);
-    
-    // Setup horizontal and vertical blur shaders
-    hblur_shader = new ShaderProgram(src_copy_vert, src_blurh_frag);
-    hblur_shader->set_uniform("num_samples",num_samples);
-    
-    vblur_shader = new ShaderProgram(src_copy_vert, src_blurv_frag);
-    vblur_shader->set_uniform("num_samples",num_samples);
+    if (num_samples>1) { // MSAA
+
+        GL_TEXTURE_TYPE = GL_TEXTURE_2D_MULTISAMPLE;
+        
+        // Setup copy shader
+        copy_shader = new ShaderProgram(src_copy_vert, src_copy_frag_MSAA);
+        copy_shader->set_uniform("num_samples",num_samples);
+
+        // Setup horizontal and vertical blur shaders
+        hblur_shader = new ShaderProgram(src_copy_vert, src_blurh_frag_MSAA);
+        hblur_shader->set_uniform("num_samples",num_samples);
+
+        vblur_shader = new ShaderProgram(src_copy_vert, src_blurv_frag_MSAA);
+        vblur_shader->set_uniform("num_samples",num_samples);
+
+    } else { // No MSAA
+        
+        GL_TEXTURE_TYPE = GL_TEXTURE_2D;
+        
+        // Setup copy shader
+        copy_shader = new ShaderProgram(src_copy_vert, src_copy_frag_noMSAA);
+
+        // Setup horizontal and vertical blur shaders
+        hblur_shader = new ShaderProgram(src_copy_vert, src_blurh_frag_noMSAA);
+        vblur_shader = new ShaderProgram(src_copy_vert, src_blurv_frag_noMSAA);
+        
+    }
     
     // Initialize framebuffer
     init();
@@ -57,16 +84,21 @@ void FrameBuffer::init(){
         glGenFramebuffers(1, &buffer[i]);
         glBindFramebuffer(GL_FRAMEBUFFER, buffer[i]);
 
+        
         // Create the texture
         glGenTextures(1, &texture[i]);
-        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture[i]);
-        glTexStorage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, num_samples, GL_RGBA8,  width_, height_, GL_FALSE);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, texture[i], 0);
+        glBindTexture(GL_TEXTURE_TYPE, texture[i]);
+        if (num_samples>1) {
+            glTexStorage2DMultisample(GL_TEXTURE_TYPE, num_samples, GL_RGBA8,  width_, height_, GL_FALSE);
+        } else {
+            glTexStorage2D(GL_TEXTURE_TYPE, num_samples, GL_RGBA8,  width_, height_);
+        }
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_TYPE, texture[i], 0);
 
         // Check FrameBuffer
         status = glCheckFramebufferStatus(GL_FRAMEBUFFER) ;
         if(status != GL_FRAMEBUFFER_COMPLETE) {
-            fprintf(stderr,"GL FrameBuffer Error! %u\n",status);
+            fprintf(stderr,"GL FrameBuffer %i Error! %u\n",i,status);
             return;
         }
     }
@@ -132,7 +164,7 @@ void FrameBuffer::apply_bloom() {
     glClear(GL_COLOR_BUFFER_BIT);
     
     hblur_shader->use();
-    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture[0]);
+    glBindTexture(GL_TEXTURE_TYPE, texture[0]);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     
     // 2) texture 1 -> vertical blur -> buffer 2
@@ -142,7 +174,7 @@ void FrameBuffer::apply_bloom() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     vblur_shader->use();
-    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture[1]);
+    glBindTexture(GL_TEXTURE_TYPE, texture[1]);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
     // 3) texture 2 -> blend -> buffer 0
@@ -152,7 +184,7 @@ void FrameBuffer::apply_bloom() {
     glBlendEquationi(buffer[0],GL_MAX);
 
     copy_shader->use();
-    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture[2]);
+    glBindTexture(GL_TEXTURE_TYPE, texture[2]);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     
     unbind();
