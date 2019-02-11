@@ -1,4 +1,4 @@
-R"(#version 320 es
+R"(
 precision mediump float;
 
 uniform sampler2D screenTexture;

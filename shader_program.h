@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <GLES3/gl32.h>
+#include <string>
 
 class ShaderProgram {
 public:
@@ -32,7 +33,7 @@ private:
     GLuint program = 0;
     GLuint vertex_shader = 0;
     GLuint fragment_shader = 0;
-    
+    std::string GLSL_version = "#version 320 es\n";
 };
 
 #endif /* SHADER_PROGRAM_H */

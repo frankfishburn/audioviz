@@ -1,4 +1,4 @@
-R"(#version 320 es
+R"(
 in float amplitude;
 uniform int num_freq;
 

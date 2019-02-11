@@ -1,4 +1,4 @@
-R"(#version 320 es
+R"(
 precision mediump float;
 
 const float gaussian_weights[] = float[] (0.2270270270,

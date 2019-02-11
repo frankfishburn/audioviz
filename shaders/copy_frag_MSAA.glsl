@@ -1,4 +1,4 @@
-R"(#version 320 es
+R"(
 precision mediump float;
 precision highp sampler2DMS;
 

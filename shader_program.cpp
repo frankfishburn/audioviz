@@ -53,8 +53,12 @@ void ShaderProgram::print_errors() {
 
 void ShaderProgram::compile_shader(GLuint &shader, const char *shaderSource){
     
+    // Prepend version info
+    std::string tmp_source = GLSL_version;
+    const char* tmp_source_str = tmp_source.append(shaderSource).c_str();
+    
     // Create shader and compile
-    glShaderSource(shader, 1, &shaderSource, NULL);
+    glShaderSource(shader, 1, &tmp_source_str, NULL);
     glCompileShader(shader);
 
     // Check shader
@@ -69,7 +73,7 @@ void ShaderProgram::compile_shader(GLuint &shader, const char *shaderSource){
 	glGetShaderInfoLog(shader, maxLength, &maxLength, &infoLog[0]);
         
         fprintf(stderr,"Shader compilation failed\n");
-        fprintf(stderr,"Shader source:\n%s\n\n",shaderSource);
+        fprintf(stderr,"Shader source:\n%s\n\n",tmp_source_str);
         for (auto i: infoLog)            
             std::cerr << i;
         fprintf(stderr,"\n\n");
