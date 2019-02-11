@@ -2,8 +2,8 @@
 #define SHADER_PROGRAM_H
 
 #include <cstddef>
-#include <GLES3/gl32.h>
 #include <string>
+#include <GL/glew.h>
 
 class ShaderProgram {
 public:
@@ -33,7 +33,7 @@ private:
     GLuint program = 0;
     GLuint vertex_shader = 0;
     GLuint fragment_shader = 0;
-    std::string GLSL_version = "#version 320 es\n";
+    std::string GLSL_version = "#version 410\n";
 };
 
 #endif /* SHADER_PROGRAM_H */
