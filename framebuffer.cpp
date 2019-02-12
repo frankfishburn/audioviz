@@ -184,13 +184,17 @@ void FrameBuffer::apply_bloom() {
     // 3) texture 2 -> blend -> buffer 0
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, buffer[0]);
     glViewport(0,0,width_,height_);
-    glEnablei(buffer[0],GL_BLEND); // Blend the blurred result with the original data (maximum value)
-    glBlendEquationi(buffer[0],GL_MAX);
+
+    glEnable(GL_BLEND); // Blend the blurred result with the original data
+    glBlendColor(0,0,0,0.5);
+    glBlendFunc(GL_CONSTANT_ALPHA, GL_CONSTANT_ALPHA);
+    glBlendEquation(GL_FUNC_ADD);
 
     copy_shader->use();
     glBindTexture(GL_TEXTURE_TYPE, texture[2]);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     
+    glDisable(GL_BLEND);
     unbind();
     
 }
