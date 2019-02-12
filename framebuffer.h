@@ -18,6 +18,7 @@ public:
     
 private:
     const int num_samples = 1;
+    const int num_buffers = 3;
     bool do_bloom = true;
     GLenum GL_TEXTURE_TYPE;
     Window* window;

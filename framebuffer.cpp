@@ -78,7 +78,7 @@ void FrameBuffer::init(){
     GLenum status;
     
     // Create 2 textures and framebuffers
-    for (int i=0; i<3; i++) {
+    for (int i=0; i<num_buffers; i++) {
         
         // Create a FrameBuffer
         glGenFramebuffers(1, &buffer[i]);
@@ -112,10 +112,10 @@ void FrameBuffer::init(){
 
 void FrameBuffer::deinit() {
     
-    glDeleteTextures(1, &texture[0]);
-    glDeleteTextures(1, &texture[1]);
-    glDeleteFramebuffers(1, &buffer[0]);
-    glDeleteFramebuffers(1, &buffer[1]);
+    for (int i=0; i<num_buffers; i++) {
+        glDeleteTextures(1, &texture[i]);
+        glDeleteFramebuffers(1, &buffer[i]);
+    }
     
 }
 
