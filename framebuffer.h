@@ -20,7 +20,7 @@ public:
     bool msaa_enabled() { return num_samples>1; }
     
 private:
-    const int num_buffers = 3;
+    const int num_buffers = 2;
     int num_samples;
     bool do_bloom = true;
     GLenum GL_TEXTURE_TYPE;
