@@ -23,12 +23,13 @@ const char *src_blurv_frag_MSAA =
 #include "shaders/blurv_frag_MSAA.glsl"
 ;
 
-FrameBuffer::FrameBuffer(Window* wnd) {
+FrameBuffer::FrameBuffer(Window* wnd, bool doMSAA) {
 
     window = wnd;
     
-    if (num_samples>1) { // MSAA
+    if (doMSAA) { // MSAA
 
+        num_samples = 5;
         GL_TEXTURE_TYPE = GL_TEXTURE_2D_MULTISAMPLE;
         
         // Setup copy shader
@@ -44,6 +45,7 @@ FrameBuffer::FrameBuffer(Window* wnd) {
 
     } else { // No MSAA
         
+        num_samples = 1;
         GL_TEXTURE_TYPE = GL_TEXTURE_2D;
         
         // Setup copy shader

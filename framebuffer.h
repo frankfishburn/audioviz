@@ -6,7 +6,7 @@
 
 class FrameBuffer {
 public:
-    FrameBuffer(Window* wnd);
+    FrameBuffer(Window* wnd, bool doMSAA);
     virtual ~FrameBuffer();
     void bind();
     void unbind();
@@ -14,11 +14,14 @@ public:
     void freshen();
     int width() {return width_;}
     int height() {return height_;}
+    void set_bloom(bool in) { do_bloom = in; }
     void toggle_bloom() { do_bloom = !do_bloom; }
+    bool bloom_enabled() { return do_bloom; }
+    bool msaa_enabled() { return num_samples>1; }
     
 private:
-    const int num_samples = 1;
     const int num_buffers = 3;
+    int num_samples;
     bool do_bloom = true;
     GLenum GL_TEXTURE_TYPE;
     Window* window;
