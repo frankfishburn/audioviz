@@ -2,6 +2,7 @@
 #define WINDOW_H
 
 #include <SDL2/SDL.h>
+#include <GL/glew.h>
 
 class Window {
 
@@ -17,7 +18,6 @@ private:
     int status;
     SDL_Window* window;
     SDL_GLContext context;
-    SDL_Renderer* renderer;
 };
 
 

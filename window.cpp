@@ -1,5 +1,6 @@
 #include "window.h"
-#include <GL/glew.h>
+
+GLboolean glewExperimental = GL_TRUE;
 
 Window::Window() {
     
@@ -10,11 +11,10 @@ Window::Window() {
         status = -1;
     }
     
+    SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    
-    SDL_GL_SetSwapInterval(0);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     
@@ -23,16 +23,21 @@ Window::Window() {
     
     context = SDL_GL_CreateContext(window);
 
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
-    
-    glewInit();
+    GLenum glewError = glewInit();
+    if( glewError != GLEW_OK ) {
+        printf( "Error initializing GLEW! %s\n", glewGetErrorString( glewError ) );
+    } 
+   
+    SDL_GL_SetSwapInterval(0);
     glViewport(0,0,640,480);
-    
+ 
+    printf("Vendor:   %s\n", glGetString(GL_VENDOR));
+    printf("Renderer: %s\n", glGetString(GL_RENDERER));
+    printf("Version:  %s\n\n", glGetString(GL_VERSION));
 }
 
 Window::~Window() {
     
-    SDL_DestroyRenderer(renderer);
     SDL_GL_DeleteContext(context);
     SDL_DestroyWindow(window);
     SDL_QuitSubSystem(SDL_INIT_EVERYTHING);
