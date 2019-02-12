@@ -14,9 +14,11 @@ public:
     void freshen();
     int width() {return width_;}
     int height() {return height_;}
+    void toggle_bloom() { do_bloom = !do_bloom; }
     
 private:
     const int num_samples = 1;
+    bool do_bloom = true;
     GLenum GL_TEXTURE_TYPE;
     Window* window;
     GLuint buffer[3];

@@ -132,6 +132,7 @@ int main(int argc, char** argv) {
                         case SDLK_LEFT: audio.back(); start_time=audio.get_current_time(); frame_count=0; force_refresh=true; break;
                         case SDLK_RIGHT: audio.forward(); start_time=audio.get_current_time(); frame_count=0; force_refresh=true; break;
                         case SDLK_ESCAPE: quit=true; break;
+                        case SDLK_b: fb.toggle_bloom(); break;
                     }
                     break;
                  

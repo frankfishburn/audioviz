@@ -146,7 +146,9 @@ void FrameBuffer::unbind() {
 
 void FrameBuffer::draw() {
     
-    apply_bloom();
+    if (do_bloom) {
+        apply_bloom();
+    }
     
     // Render offscreen buffer to screen
     glBindFramebuffer(GL_READ_FRAMEBUFFER, buffer[0]);
