@@ -8,11 +8,16 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 include_directories("${PROJECT_BINARY_DIR}")
 
+# Find OpenGL
+set(OpenGL_GL_PREFERENCE "GLVND")
+find_package(OpenGL REQUIRED)
+message(STATUS "OpenGL include directory: ${OPENGL_INCLUDE_DIR}")
+message(STATUS "OpenGL libraries: ${OPENGL_LIBRARIES}")
+
 # Find FFTW
 find_path(FFTW_INCLUDE_DIR fftw3.h)
 find_library(FFTW_LIBS REQUIRED NAMES fftw3)
 find_library(FFTWF_LIBS REQUIRED NAMES fftw3f)
-include_directories(${FFTW_INCLUDE_DIR})
 message(STATUS "FFTW include directory: ${FFTW_INCLUDE_DIR}")
 message(STATUS "FFTW float library: ${FFTWF_LIBS}")
 message(STATUS "FFTW double library: ${FFTW_LIBS}")
@@ -22,6 +27,9 @@ find_library(SPECTROGRAM_LIB NAMES spectrogram PATH_SUFFIXES build/src)
 include_directories(${SPECTROGRAM_INCLUDE_DIR})
 
 add_executable(audioviz main.cpp audio_manager.cpp framebuffer.cpp interpolant.cpp shader_program.cpp stft.cpp window.cpp)
-target_link_libraries(audioviz GLEW GL SDL2 SDL2_image)
+target_include_directories(audioviz PUBLIC ${OPENGL_INCLUDE_DIR})
+target_include_directories(audioviz PUBLIC ${FFTW_INCLUDE_DIR})
+target_link_libraries(audioviz SDL2 SDL2_image)
+target_link_libraries(audioviz ${OPENGL_LIBRARIES} GLEW)
 target_link_libraries(audioviz avcodec avformat avutil avdevice bz2 swresample)
 target_link_libraries(audioviz ${FFTW_LIBS} ${FFTWF_LIBS} ${SPECTROGRAM_LIB} )
