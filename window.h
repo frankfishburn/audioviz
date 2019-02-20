@@ -11,6 +11,7 @@ public:
     ~Window();
     void check_errors();
     void swap();
+    void toggle_fullscreen();
     int width();
     int height();
     
