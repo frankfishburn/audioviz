@@ -5,38 +5,37 @@
 #include "window.h"
 
 class FrameBuffer {
-public:
+   public:
     FrameBuffer(Window* wnd, bool doMSAA);
     virtual ~FrameBuffer();
     void bind();
     void unbind();
     void draw();
     void freshen();
-    int width() {return width_;}
-    int height() {return height_;}
+    int  width() { return width_; }
+    int  height() { return height_; }
     void set_bloom(bool in) { do_bloom = in; }
     void toggle_bloom() { do_bloom = !do_bloom; }
     bool bloom_enabled() { return do_bloom; }
-    bool msaa_enabled() { return num_samples>1; }
-    
-private:
+    bool msaa_enabled() { return num_samples > 1; }
+
+   private:
     const int num_buffers = 2;
-    int num_samples;
-    bool do_bloom = true;
-    GLenum GL_TEXTURE_TYPE;
-    Window* window;
-    GLuint buffer[3];
-    GLuint texture[3];
-    
-    ShaderProgram *copy_shader;
-    ShaderProgram *hblur_shader;
-    ShaderProgram *vblur_shader;
-    void init();
-    void deinit();
-    void apply_bloom();
-    int width_;
-    int height_;
+    int       num_samples;
+    bool      do_bloom = true;
+    GLenum    GL_TEXTURE_TYPE;
+    Window*   window;
+    GLuint    buffer[3];
+    GLuint    texture[3];
+
+    ShaderProgram* copy_shader;
+    ShaderProgram* hblur_shader;
+    ShaderProgram* vblur_shader;
+    void           init();
+    void           deinit();
+    void           apply_bloom();
+    int            width_;
+    int            height_;
 };
 
 #endif /* FRAMEBUFFER_H */
-
