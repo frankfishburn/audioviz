@@ -20,7 +20,6 @@ class STFT {
     // accessors
     float*        getPowerPtr(const int channel) { return out_power[channel].data(); };
     unsigned long numSamples() { return props.num_samples; };
-    unsigned long numTime() { return time_len; };
     unsigned long numFreq() { return freq_len; };
     int           maxGoodFreq();
 
@@ -34,9 +33,7 @@ class STFT {
     SpectrogramTransform* program;
 
     unsigned long                   freq_len;
-    unsigned long                   time_len;
     std::vector<float>              freq;
-    std::vector<float>              time;
     std::vector<std::vector<float>> power;
 
     int                             out_freq_len;

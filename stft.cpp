@@ -47,7 +47,6 @@ void STFT::initialize() {
     program = spectrogram_create(&props, &config);
 
     // Get derived output dimensions
-    time_len = 1;  // spectrogram_get_timelen( program );
     freq_len = spectrogram_get_freqlen(program);
 
     // Get frequency vector
@@ -68,10 +67,10 @@ void STFT::initialize() {
     out_power.resize(num_channels);
     power.resize(num_channels);
     for (int i = 0; i < num_channels; i++) {
-        out_power[i].resize(time_len * out_freq_len);
+        out_power[i].resize(out_freq_len);
         std::fill(out_power[i].begin(), out_power[i].end(), 0);
 
-        power[i].resize(time_len * freq_len);
+        power[i].resize(freq_len);
         std::fill(power[i].begin(), power[i].end(), 0);
     }
 
@@ -83,17 +82,17 @@ void STFT::analyze() {
     maxpower          = 1.0f;
     float tmpmaxpower = -INFINITY;
 
-    for (double pos = 0.0; pos < 1.0; pos += .01) {
-        long start_index = (long)round(pos * num_samples);
+    for (int idx = 0; idx < 100; idx++) {
+        long start_index = (long)round((idx / 100.0) * num_samples);
 
         for (int channel = 0; channel < num_channels; channel++) {
             // Compute spectrogram
             compute(channel, start_index);
 
             // Get maximum power
-            for (unsigned long time = 0; time < time_len; time++)
-                for (int freq = 0; freq < out_freq_len; freq++)
-                    tmpmaxpower = std::max(tmpmaxpower, out_power[channel][time * freq_len + freq]);
+            for (int freq = 0; freq < out_freq_len; freq++) {
+                tmpmaxpower = std::max(tmpmaxpower, out_power[channel][freq]);
+            }
         }
     }
 
@@ -111,11 +110,9 @@ void STFT::compute(const int channel, const long sample_index) {
     spectrogram_get_power_periodogram(program, (void*)power[channel].data());
 
     // Rescale based on frequency and log transform
-    for (unsigned long tidx = 0; tidx < time_len; tidx++) {
-        for (unsigned long fidx = 0; fidx < freq_len; fidx++) {
-            float scale                            = 1 / (48.35 * pow(log2(freq[fidx]), -3.434));
-            power[channel][tidx * freq_len + fidx] = sqrt(power[channel][tidx * freq_len + fidx]) * scale / maxpower;
-        }
+    for (unsigned long fidx = 0; fidx < freq_len; fidx++) {
+        float scale          = 1 / (48.35 * pow(log2(freq[fidx]), -3.434));
+        power[channel][fidx] = sqrt(power[channel][fidx]) * scale / maxpower;
     }
 
     interpolator->estimate(power[channel].data(), out_power[channel].data());
