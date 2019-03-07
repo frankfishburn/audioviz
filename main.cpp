@@ -65,14 +65,14 @@ int main(int argc, char** argv) {
     Window wnd;
 
     // Create a framebuffer
-    FrameBuffer* fb = new FrameBuffer(&wnd, true);
+    FrameBuffer fb(&wnd, true);
 
     // Setup shaders
     ShaderProgram main_shader(src_render_vert, src_render_frag);
 
     // Set static uniforms
     main_shader.set_uniform("num_freq", (int)num_frequencies);
-    main_shader.set_uniform("resolution", (float)fb->width(), fb->height());
+    main_shader.set_uniform("resolution", (float)fb.width(), fb.height());
 
     // Set up vertex buffer/array object for each channel
     GLuint VBO;
@@ -119,10 +119,10 @@ int main(int argc, char** argv) {
 
                 case SDL_WINDOWEVENT:
                     if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-                        fb->freshen();
+                        fb.freshen();
                         glBindFramebuffer(GL_FRAMEBUFFER, 0);
                         glViewport(0, 0, e.window.data1, e.window.data2);
-                        main_shader.set_uniform("resolution", (float)fb->width(), fb->height());
+                        main_shader.set_uniform("resolution", (float)fb.width(), fb.height());
                     }
                     break;
 
@@ -153,21 +153,17 @@ int main(int argc, char** argv) {
                             wnd.toggle_fullscreen();
                             break;
                         case SDLK_b:
-                            fb->toggle_bloom();
+                            fb.toggle_bloom();
                             break;
                         case SDLK_m:
-                            bool msaa  = fb->msaa_enabled();
-                            bool bloom = fb->bloom_enabled();
-                            delete fb;
-                            fb = new FrameBuffer(&wnd, !msaa);
-                            fb->set_bloom(bloom);
+                            fb.toggle_msaa();
                             break;
                     }
                     break;
             }
         }
 
-        fb->bind();
+        fb.bind();
         main_shader.use();
 
         // Update current time
@@ -205,8 +201,8 @@ int main(int argc, char** argv) {
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, num_vertices);
 
-        fb->unbind();
-        fb->draw();
+        fb.unbind();
+        fb.draw();
         wnd.swap();
 
         // Display framerate info
@@ -225,7 +221,6 @@ int main(int argc, char** argv) {
     }
 
     // Cleanup
-    delete fb;
     audio.pause();
     printf("\r\n");
 

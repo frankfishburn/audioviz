@@ -16,13 +16,18 @@ class FrameBuffer {
     int  height() { return height_; }
     void set_bloom(bool in) { do_bloom = in; }
     void toggle_bloom() { do_bloom = !do_bloom; }
+    void toggle_msaa() {
+        do_msaa = !do_msaa;
+        freshen();
+    }
     bool bloom_enabled() { return do_bloom; }
-    bool msaa_enabled() { return num_samples > 1; }
+    bool msaa_enabled() { return do_msaa; }
 
    private:
     const int num_buffers = 2;
     int       num_samples;
     bool      do_bloom = true;
+    bool      do_msaa  = true;
     GLenum    GL_TEXTURE_TYPE;
     Window*   window;
     GLuint    buffer[3];

@@ -24,9 +24,22 @@ const char* src_blurv_frag_MSAA =
     ;
 
 FrameBuffer::FrameBuffer(Window* wnd, bool doMSAA) {
-    window = wnd;
+    window  = wnd;
+    do_msaa = doMSAA;
 
-    if (doMSAA) {  // MSAA
+    // Initialize framebuffer
+    init();
+}
+
+FrameBuffer::~FrameBuffer() {
+    deinit();
+    delete copy_shader;
+    delete hblur_shader;
+    delete vblur_shader;
+}
+
+void FrameBuffer::init() {
+    if (do_msaa) {  // MSAA
 
         num_samples     = 5;
         GL_TEXTURE_TYPE = GL_TEXTURE_2D_MULTISAMPLE;
@@ -55,18 +68,6 @@ FrameBuffer::FrameBuffer(Window* wnd, bool doMSAA) {
         vblur_shader = new ShaderProgram(src_copy_vert, src_blurv_frag_noMSAA);
     }
 
-    // Initialize framebuffer
-    init();
-}
-
-FrameBuffer::~FrameBuffer() {
-    deinit();
-    delete copy_shader;
-    delete hblur_shader;
-    delete vblur_shader;
-}
-
-void FrameBuffer::init() {
     // Get window size
     width_  = window->width();
     height_ = window->height();
