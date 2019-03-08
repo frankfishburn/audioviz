@@ -20,6 +20,7 @@ class FrameBuffer {
         do_msaa = !do_msaa;
         freshen();
     }
+    void toggle_bg() { bg_black = !bg_black; };
     bool bloom_enabled() { return do_bloom; }
     bool msaa_enabled() { return do_msaa; }
 
@@ -28,6 +29,7 @@ class FrameBuffer {
     int       num_samples;
     bool      do_bloom = true;
     bool      do_msaa  = true;
+    bool      bg_black = true;
     GLenum    GL_TEXTURE_TYPE;
     Window*   window;
     GLuint    buffer[3];

@@ -119,7 +119,11 @@ void FrameBuffer::bind() {
     // Bind FrameBuffer render target
     glBindFramebuffer(GL_FRAMEBUFFER, buffer[0]);
     glViewport(0, 0, width_, height_);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    if (bg_black) {
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    } else {
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    }
     glClear(GL_COLOR_BUFFER_BIT);
 }
 

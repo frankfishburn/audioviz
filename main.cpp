@@ -158,6 +158,9 @@ int main(int argc, char** argv) {
                         case SDLK_m:
                             fb.toggle_msaa();
                             break;
+                        case SDLK_k:
+                            fb.toggle_bg();
+                            break;
                     }
                     break;
             }
