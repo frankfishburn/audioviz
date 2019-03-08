@@ -1,6 +1,5 @@
 #include <algorithm>  // min,max
 #include <cmath>      // INFINITY
-#include <cstdio>     // printf
 
 #include "stft.h"
 
@@ -47,56 +46,73 @@ void STFT::initialize() {
     program = spectrogram_create(&props, &config);
 
     // Get derived output dimensions
-    freq_len = spectrogram_get_freqlen(program);
+    temp_freq_len = spectrogram_get_freqlen(program);
 
-    // Get frequency vector
-    freq.resize(freq_len);
-    spectrogram_get_freq(program, (void*)freq.data());
+    // Populate the intermediate results
+    temp_freq.resize(temp_freq_len);
+    spectrogram_get_freq(program, (void*)temp_freq.data());
 
-    // Populate the output frequency vector
-    out_freq_len    = 1000;
-    float min_freq  = 25;
-    float max_freq  = 7902;
-    float increment = (log2(max_freq) - log2(min_freq)) / (out_freq_len - 1);
-    out_freq.resize(out_freq_len);
-    for (int i = 0; i < out_freq_len; i++) {
-        out_freq[i] = pow(2, log2(min_freq) + i * increment);
-    }
+    temp_power.resize(temp_freq_len);
 
-    // Allocate spectrogram power for each channel
-    out_power.resize(num_channels);
-    power.resize(num_channels);
-    for (int i = 0; i < num_channels; i++) {
-        out_power[i].resize(out_freq_len);
-        std::fill(out_power[i].begin(), out_power[i].end(), 0);
+    // Initialize output
+    result.resize(num_channels);
+    for (int ch = 0; ch < num_channels; ch++) {
+        // Setup
+        float freq_length = 1000;
+        float min_freq    = 25;
+        float max_freq    = 7902;
+        float increment   = (log2(max_freq) - log2(min_freq)) / (freq_length - 1);
 
-        power[i].resize(freq_len);
-        std::fill(power[i].begin(), power[i].end(), 0);
-    }
+        // Allocate
+        result[ch].length = freq_length;
+        result[ch].freq.resize(freq_length);
+        result[ch].power.resize(freq_length);
 
-    // Setup interpolator
-    interpolator = new interpolant((int)freq_len, freq.data(), out_freq_len, out_freq.data());
-}
-
-void STFT::analyze() {
-    maxpower          = 1.0f;
-    float tmpmaxpower = -INFINITY;
-
-    for (int idx = 0; idx < 100; idx++) {
-        long start_index = (long)round((idx / 100.0) * num_samples);
-
-        for (int channel = 0; channel < num_channels; channel++) {
-            // Compute spectrogram
-            compute(channel, start_index);
-
-            // Get maximum power
-            for (int freq = 0; freq < out_freq_len; freq++) {
-                tmpmaxpower = std::max(tmpmaxpower, out_power[channel][freq]);
-            }
+        // Populate frequency
+        for (int i = 0; i < freq_length; i++) {
+            result[ch].freq[i] = pow(2, log2(min_freq) + i * increment);
         }
     }
 
-    maxpower = tmpmaxpower;
+    // Setup interpolator
+    interpolator = new interpolant((int)temp_freq_len, temp_freq.data(), result[0].length, result[0].freq.data());
+}
+
+void STFT::analyze() {
+    maxmaxpower               = 1.0f;
+    maxsumpower               = 1.0f;
+    maxdeltasumpower          = 1.0f;
+    float tmpmaxmaxpower      = -INFINITY;  // Max. individual power value
+    float tmpmaxsumpower      = -INFINITY;  // Max. sum of power over all frequencies
+    float tmpmaxdeltasumpower = -INFINITY;  // Max. change in sum of power over all frequencies
+
+    const int analysis_len = 100;
+
+    float prev_sumpower = 0;
+    for (int idx = 0; idx < analysis_len; idx++) {
+        long start_index = (long)round((idx / (float)analysis_len) * num_samples);
+
+        for (int ch = 0; ch < num_channels; ch++) {
+            prev_sumpower = result[ch].sumpower;
+
+            // Compute spectrogram
+            compute(ch, start_index);
+
+            tmpmaxmaxpower      = std::max(tmpmaxmaxpower, result[ch].maxpower);
+            tmpmaxsumpower      = std::max(tmpmaxsumpower, result[ch].sumpower);
+            tmpmaxdeltasumpower = std::max(tmpmaxdeltasumpower, std::abs(result[ch].sumpower - prev_sumpower));
+        }
+    }
+
+    maxmaxpower      = tmpmaxmaxpower;
+    maxsumpower      = tmpmaxsumpower;
+    maxdeltasumpower = tmpmaxdeltasumpower;
+}
+
+void STFT::compute(const long sample_index) {
+    for (int ch = 0; ch < num_channels; ch++) {
+        compute(ch, sample_index);
+    }
 }
 
 void STFT::compute(const int channel, const long sample_index) {
@@ -107,17 +123,31 @@ void STFT::compute(const int channel, const long sample_index) {
     start_index      = std::min(start_index, max_sample_index);
 
     spectrogram_execute(program, (void*)(audio_ptr + num_channels * start_index + channel));
-    spectrogram_get_power_periodogram(program, (void*)power[channel].data());
+    spectrogram_get_power_periodogram(program, (void*)temp_power.data());
 
     // Rescale based on frequency and log transform
-    for (unsigned long fidx = 0; fidx < freq_len; fidx++) {
-        float scale          = 1 / (48.35 * pow(log2(freq[fidx]), -3.434));
-        power[channel][fidx] = sqrt(power[channel][fidx]) * scale / maxpower;
+    for (unsigned long fidx = 0; fidx < temp_freq_len; fidx++) {
+        float scale      = 1 / (48.35 * pow(log2(temp_freq[fidx]), -3.434));
+        temp_power[fidx] = sqrt(temp_power[fidx]) * scale / maxmaxpower;
     }
 
-    interpolator->estimate(power[channel].data(), out_power[channel].data());
+    interpolator->estimate(temp_power.data(), result[channel].power.data());
+
+    // Get the sum of power and change
+    float maxpower      = -INFINITY;
+    float sumpower      = 0;
+    float sumpower_prev = result[channel].sumpower;
+
+    for (int fidx = 0; fidx < result[channel].length; fidx++) {
+        sumpower += result[channel].power[fidx];
+        maxpower = std::max(maxpower, result[channel].power[fidx]);
+    }
+
+    result[channel].maxpower      = maxpower / maxmaxpower;
+    result[channel].sumpower      = sumpower / maxsumpower;
+    result[channel].deltasumpower = (sumpower - sumpower_prev) / maxdeltasumpower;
 }
 
 int STFT::maxGoodFreq() {
-    return out_freq_len;
+    return result[0].length;
 }

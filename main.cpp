@@ -173,7 +173,7 @@ int main(int argc, char** argv) {
         float* power_right;
 
         stft.compute(0, current_sample);
-        power_left = stft.getPowerPtr(0);
+        power_left = stft.getSpectrum(0).power.data();
 
         if (num_channels == 1) {
             // Mono
@@ -182,7 +182,7 @@ int main(int argc, char** argv) {
         } else {
             // Stereo
             stft.compute(1, current_sample);
-            power_right = stft.getPowerPtr(1);
+            power_right = stft.getSpectrum(1).power.data();
         }
 
         // Copy left channel power spectrum into vertex buffer
