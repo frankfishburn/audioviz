@@ -1,6 +1,14 @@
 #include <algorithm>  // min,max
 #include <cmath>      // INFINITY
 
+#ifndef SAVE_STFT
+#define SAVE_STFT 0
+#endif
+
+#if SAVE_STFT == 1
+#include <fstream>  // write csv
+#endif
+
 #include "stft.h"
 
 STFT::STFT(audio_manager& audio, SpectrogramConfig& inputconfig, unsigned long input_samples) {
@@ -88,6 +96,16 @@ void STFT::analyze() {
 
     const int analysis_len = 100;
 
+#if SAVE_STFT == 1
+    // Open debugging output CSV files
+    std::ofstream writer[num_channels];
+    for (int channel = 0; channel < num_channels; channel++) {
+        char filename[50];
+        sprintf(filename, "audioviz_analysis_%i.csv", channel);
+        writer[channel].open(filename);
+    }
+#endif
+
     float prev_sumpower = 0;
     for (int idx = 0; idx < analysis_len; idx++) {
         long start_index = (long)round((idx / (float)analysis_len) * num_samples);
@@ -98,11 +116,30 @@ void STFT::analyze() {
             // Compute spectrogram
             compute(ch, start_index);
 
+#if SAVE_STFT == 1
+            // Save power spectrum
+            for (int freq = 0; freq < result[ch].length; freq++) {
+                // Write data to CSV file
+                writer[ch] << result[ch].power[freq];
+                if (freq < result[ch].length - 1) {
+                    writer[ch] << ", ";
+                }
+            }
+            writer[ch] << "\n";
+#endif
+
             tmpmaxmaxpower      = std::max(tmpmaxmaxpower, result[ch].maxpower);
             tmpmaxsumpower      = std::max(tmpmaxsumpower, result[ch].sumpower);
             tmpmaxdeltasumpower = std::max(tmpmaxdeltasumpower, std::abs(result[ch].sumpower - prev_sumpower));
         }
     }
+
+#if SAVE_STFT == 1
+    // Close debugging output CSV files
+    for (int channel = 0; channel < num_channels; channel++) {
+        writer[channel].close();
+    }
+#endif
 
     maxmaxpower      = tmpmaxmaxpower;
     maxsumpower      = tmpmaxsumpower;
