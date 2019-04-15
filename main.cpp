@@ -12,12 +12,7 @@
 #include "stft.h"
 #include "window.h"
 
-const char* src_render_vert =
-#include "shaders/render_vert.glsl"
-    ;
-const char* src_render_frag =
-#include "shaders/render_frag.glsl"
-    ;
+#include "vfx/liquid/effect.h"
 
 using namespace std;
 
@@ -38,8 +33,6 @@ int main(int argc, char** argv) {
 
     audio.print();
 
-    const int num_channels = audio.get_num_channels();
-
     // Configure spectrogram transform
     SpectrogramConfig config;
     config.padding_mode     = PAD;
@@ -54,37 +47,14 @@ int main(int argc, char** argv) {
     // Analyze for maximum power
     stft.analyze();
 
-    // Get number of frequencies
-    const unsigned long num_frequencies = stft.maxGoodFreq();
-    const unsigned long num_vertices    = 4 * num_frequencies;
-
-    // Allocate vertex vector
-    std::vector<float> vertices(num_vertices);
-
     // Initialize window and context
     Window wnd;
 
     // Create a framebuffer
     FrameBuffer fb(&wnd, true);
 
-    // Setup shaders
-    ShaderProgram main_shader(src_render_vert, src_render_frag);
-
-    // Set static uniforms
-    main_shader.set_uniform("num_freq", (int)num_frequencies);
-    main_shader.set_uniform("resolution", (float)fb.width(), fb.height());
-
-    // Set up vertex buffer/array object for each channel
-    GLuint VBO;
-    GLuint VAO;
-    glGenVertexArrays(1, &VAO);
-
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, num_vertices * sizeof(GLfloat), NULL, GL_DYNAMIC_DRAW);
-
-    glBindVertexArray(VAO);
-    main_shader.set_attrib("amplitude", 1);
+    // Setup visual effect renderer
+    FXLiquid vfx(&stft, &fb);
 
     // Enable v-sync
     SDL_GL_SetSwapInterval(1);
@@ -122,7 +92,7 @@ int main(int argc, char** argv) {
                         fb.freshen();
                         glBindFramebuffer(GL_FRAMEBUFFER, 0);
                         glViewport(0, 0, e.window.data1, e.window.data2);
-                        main_shader.set_uniform("resolution", (float)fb.width(), fb.height());
+                        vfx.set_resolution(fb.width(), fb.height());
                     }
                     break;
 
@@ -166,46 +136,17 @@ int main(int argc, char** argv) {
             }
         }
 
-        fb.bind();
-        main_shader.use();
-
-        // Update current time
+        // Compute current STFT
         long current_sample = audio.get_current_sample();
+        stft.compute(current_sample);
 
-        float* power_left;
-        float* power_right;
+        // Render visual effects to framebuffer
+        vfx.draw();
 
-        stft.compute(0, current_sample);
-        power_left = stft.getSpectrum(0).power.data();
-
-        if (num_channels == 1) {
-            // Mono
-            power_right = power_left;
-
-        } else {
-            // Stereo
-            stft.compute(1, current_sample);
-            power_right = stft.getSpectrum(1).power.data();
-        }
-
-        // Copy left channel power spectrum into vertex buffer
-        for (unsigned long freq = 0; freq < num_frequencies; freq++) {
-            vertices[2 * freq + 1] = -power_left[freq];
-        }
-
-        // Copy right channel power spectrum into vertex buffer
-        for (unsigned long freq = 0; freq < num_frequencies; freq++) {
-            vertices[num_vertices - 2 * freq] = power_right[freq];
-        }
-
-        // Update the buffer
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, num_vertices * sizeof(GLfloat), vertices.data());
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, num_vertices);
-
-        fb.unbind();
+        // Draw framebuffer to screen
         fb.draw();
+
+        // Swap windows
         wnd.swap();
 
         // Display framerate info

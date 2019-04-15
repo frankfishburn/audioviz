@@ -29,6 +29,7 @@ class STFT {
 
     // Accessors
     Spectrum      getSpectrum(int ch) { return result[ch]; };
+    unsigned int  numChannels() { return num_channels; };
     unsigned long numSamples() { return props.num_samples; };
     unsigned long numFreq() { return result[0].length; };
     int           maxGoodFreq();

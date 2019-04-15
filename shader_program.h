@@ -7,6 +7,7 @@
 
 class ShaderProgram {
    public:
+    ShaderProgram(){};
     ShaderProgram(const char* vertex_source, const char* fragment_source);
     ShaderProgram(const ShaderProgram& orig);
     virtual ~ShaderProgram();

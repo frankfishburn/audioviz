@@ -6,7 +6,7 @@ out vec4 FragColor;
 
 void main(void) {
 
-    float xpos = 2.0 * abs(gl_FragCoord.x - resolution.x/2.0) / resolution.x; 
+    float xpos = 2.0 * abs(gl_FragCoord.x - resolution.x/2.0) / resolution.x;
     float ypos = abs(gl_FragCoord.y) / resolution.y;
 
     // Apply the jet colormap
