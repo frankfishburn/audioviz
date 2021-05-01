@@ -2,7 +2,7 @@
 #define STFT_H
 
 #include <vector>
-#include "audio_manager.h"
+#include "audio_player.h"
 #include "interpolant.h"
 #include "spectrogram.h"
 
@@ -17,7 +17,7 @@ struct Spectrum {
 
 class STFT {
    public:
-    STFT(audio_manager& audio, SpectrogramConfig& conf, unsigned long insamples);
+    STFT(AudioPlayer& audio, SpectrogramConfig& conf, unsigned long insamples);
     STFT(const STFT& orig);
     ~STFT();
 

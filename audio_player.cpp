@@ -1,4 +1,4 @@
-#include "audio_manager.h"
+#include "audio_player.h"
 
 #include <SDL2/SDL.h>  // Audio playback
 #include <algorithm>   // min, max
@@ -10,18 +10,18 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 
-audio_manager::audio_manager(const char* filename) {
+AudioPlayer::AudioPlayer(const char* filename) {
     input_file = std::string(filename);
     load_file();
     setup_playback();
 }
 
-audio_manager::audio_manager(const audio_manager& orig) {
+AudioPlayer::AudioPlayer(const AudioPlayer& orig) {
     data.resize(orig.num_samples * orig.num_channels);
     memcpy(data.data(), orig.data.data(), num_samples * num_channels * sizeof(float));
 }
 
-audio_manager::~audio_manager() {
+AudioPlayer::~AudioPlayer() {
     SDL_CloseAudio();
 
     if (isLoaded) {
@@ -30,7 +30,7 @@ audio_manager::~audio_manager() {
     }
 }
 
-void audio_manager::load_file() {
+void AudioPlayer::load_file() {
     int              status;
     char             errmsg[256];
     const char*      filename = input_file.c_str();
@@ -221,7 +221,7 @@ void audio_manager::load_file() {
     isLoaded = true;
 }
 
-void audio_manager::setup_playback() {
+void AudioPlayer::setup_playback() {
     if (!isLoaded)
         return;
 
@@ -247,15 +247,15 @@ void audio_manager::setup_playback() {
     isPlayable = true;
 }
 
-void audio_manager::callback(void* userdata, Uint8* stream, int len) {
+void AudioPlayer::callback(void* userdata, Uint8* stream, int len) {
     SDL_memset(stream, 0, len);
-    audio_manager* am        = (audio_manager*)userdata;
+    AudioPlayer* am        = (AudioPlayer*)userdata;
     Uint8**        audio_ptr = (Uint8**)&(am->data);
     SDL_MixAudioFormat(stream, (Uint8*)*audio_ptr + am->callback_offset, AUDIO_F32, len, SDL_MIX_MAXVOLUME / 2);
     am->callback_offset += len;
 }
 
-void audio_manager::update_offset() {
+void AudioPlayer::update_offset() {
     if (isPlaying) {
         Uint64 now = SDL_GetPerformanceCounter();
         timer_offset += (now - timer_start);
@@ -263,14 +263,14 @@ void audio_manager::update_offset() {
     }
 }
 
-Uint64 audio_manager::get_current_sample() {
+Uint64 AudioPlayer::get_current_sample() {
     Uint64 current_sample = (Uint64)round(get_current_time() * (double)sample_rate);
     current_sample        = std::min(num_samples, current_sample);
     current_sample        = std::max((Uint64)1, current_sample);
     return current_sample;
 }
 
-double audio_manager::get_current_time() {
+double AudioPlayer::get_current_time() {
     Uint64 position = timer_offset;
 
     if (isPlaying) {
@@ -281,7 +281,7 @@ double audio_manager::get_current_time() {
     return position / (double)SDL_GetPerformanceFrequency();
 }
 
-std::string audio_manager::get_current_time_str() {
+std::string AudioPlayer::get_current_time_str() {
     double seconds = get_current_time();
 
     int hours = floor(seconds / 3600);
@@ -302,7 +302,7 @@ std::string audio_manager::get_current_time_str() {
     return std::string(buf);
 }
 
-void audio_manager::play() {
+void AudioPlayer::play() {
     if (!isPlaying) {
         timer_start = SDL_GetPerformanceCounter();
         SDL_PauseAudio(0);
@@ -310,7 +310,7 @@ void audio_manager::play() {
     }
 }
 
-void audio_manager::pause() {
+void AudioPlayer::pause() {
     if (isPlaying) {
         update_offset();
         SDL_PauseAudio(1);
@@ -318,7 +318,7 @@ void audio_manager::pause() {
     }
 }
 
-void audio_manager::toggle_playback() {
+void AudioPlayer::toggle_playback() {
     if (isPlaying) {
         pause();
     } else {
@@ -326,7 +326,7 @@ void audio_manager::toggle_playback() {
     }
 }
 
-void audio_manager::back() {
+void AudioPlayer::back() {
     pause();
 
     Uint64 delta_sample   = 15 * sample_rate;
@@ -345,7 +345,7 @@ void audio_manager::back() {
     play();
 }
 
-void audio_manager::forward() {
+void AudioPlayer::forward() {
     pause();
 
     Uint64 delta_sample   = 15 * sample_rate;
@@ -364,7 +364,7 @@ void audio_manager::forward() {
     play();
 }
 
-void audio_manager::print() {
+void AudioPlayer::print() {
     if (!get_title().empty()) {
         printf("Playing \"%s\"", get_title().c_str());
         if (!get_artist().empty()) {

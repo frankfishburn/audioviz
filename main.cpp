@@ -6,7 +6,7 @@
 #include <memory>
 #include <vector>
 
-#include "audio_manager.h"
+#include "audio_player.h"
 #include "framebuffer.h"
 #include "shader_program.h"
 #include "stft.h"
@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
     }
 
     // Load audio and setup playback
-    audio_manager audio(argv[1]);
+    AudioPlayer audio(argv[1]);
 
     if (!audio.is_playable() || audio.get_num_samples() == 0) {
         fprintf(stderr, "Audio problem, bailing out!\n");

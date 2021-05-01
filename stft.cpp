@@ -11,7 +11,7 @@
 
 #include "stft.h"
 
-STFT::STFT(audio_manager& audio, SpectrogramConfig& inputconfig, unsigned long input_samples) {
+STFT::STFT(AudioPlayer& audio, SpectrogramConfig& inputconfig, unsigned long input_samples) {
     num_channels = audio.get_num_channels();
     num_samples  = audio.get_num_samples();
     audio_ptr    = audio.get_data();

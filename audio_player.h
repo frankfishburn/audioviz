@@ -1,14 +1,14 @@
-#ifndef AUDIO_MANAGER_H
-#define AUDIO_MANAGER_H
+#ifndef AUDIO_PLAYER_H
+#define AUDIO_PLAYER_H
 
 #include <string>
 #include <vector>
 
-class audio_manager {
+class AudioPlayer {
    public:
-    audio_manager(const char* filename);
-    audio_manager(const audio_manager& orig);
-    virtual ~audio_manager();
+    AudioPlayer(const char* filename);
+    AudioPlayer(const AudioPlayer& orig);
+    virtual ~AudioPlayer();
 
     // Playback controls
     void play();
@@ -64,10 +64,9 @@ class audio_manager {
 
     // Initialization
     void        load_file();       // File
-    void        load_file2();      // File
     void        setup_playback();  // Player
     static void callback(void* userdata, uint8_t* stream, int len);
     void        update_offset();
 };
 
-#endif /* AUDIO_MANAGER_H */
+#endif /* AUDIO_PLAYER_H */

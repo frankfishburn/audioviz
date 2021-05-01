@@ -26,7 +26,7 @@ find_path(SPECTROGRAM_INCLUDE_DIR spectrogram.h PATH_SUFFIXES include)
 find_library(SPECTROGRAM_LIB NAMES spectrogram PATH_SUFFIXES build/src)
 include_directories(${SPECTROGRAM_INCLUDE_DIR})
 
-add_executable(audioviz main.cpp audio_manager.cpp framebuffer.cpp interpolant.cpp shader_program.cpp stft.cpp window.cpp vfx/liquid/effect.cpp)
+add_executable(audioviz main.cpp audio_player.cpp framebuffer.cpp interpolant.cpp shader_program.cpp stft.cpp window.cpp vfx/liquid/effect.cpp)
 target_include_directories(audioviz PUBLIC ${PROJECT_SOURCE_DIR})
 target_include_directories(audioviz PUBLIC ${OPENGL_INCLUDE_DIR})
 target_include_directories(audioviz PUBLIC ${FFTW_INCLUDE_DIR})
