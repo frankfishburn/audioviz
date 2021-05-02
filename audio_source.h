@@ -3,6 +3,7 @@
 
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 class AudioSource {
@@ -23,10 +24,6 @@ class AudioSource {
     const std::vector<float> &data() const { return data_; };
 
     // Query metadata
-    std::string artist() const { return artist_; };
-    std::string album() const { return album_; };
-    std::string title() const { return title_; };
-    std::string year() const { return year_; };
     std::string description() const;
 
    private:
@@ -43,10 +40,7 @@ class AudioSource {
 
     // Metadata
     std::string filename_;
-    std::string artist_;
-    std::string album_;
-    std::string title_;
-    std::string year_;
+    std::unordered_map<std::string, std::string> tags_;
 };
 
 class AudioSourceError : virtual public std::exception {

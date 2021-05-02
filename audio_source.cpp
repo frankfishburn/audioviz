@@ -61,18 +61,11 @@ AudioSource::AudioSource(std::string filename) {
 
     // Update audio metadata
     AVDictionaryEntry *tag = NULL;
-
-    tag = av_dict_get(format->metadata, "artist", NULL, 0);
-    if (tag != NULL) artist_ = std::string(tag->value);
-
-    tag = av_dict_get(format->metadata, "album", NULL, 0);
-    if (tag != NULL) album_ = std::string(tag->value);
-
-    tag = av_dict_get(format->metadata, "title", NULL, 0);
-    if (tag != NULL) title_ = std::string(tag->value);
-
-    tag = av_dict_get(format->metadata, "originalyear", NULL, 0);
-    if (tag != NULL) year_ = std::string(tag->value);
+    while (true) {
+        tag = av_dict_get(format->metadata, "", tag, AV_DICT_IGNORE_SUFFIX);
+        if (tag == NULL) break;
+        tags_.insert({tag->key, tag->value});
+    }
 
     // Setup decoder
     context = avcodec_alloc_context3(codec);
@@ -191,21 +184,21 @@ std::string AudioSource::info() const {
 
 std::string AudioSource::description() const {
     std::ostringstream os;
-    if (!title_.empty()) {
-        os << "\"" << title_ << "\"";
+    if (tags_.find("title") != tags_.end()) {
+        os << "\"" << tags_.at("title") << "\"";
     } else {
         os << "<Unknown>";
     }
-    if (!artist_.empty()) {
-        os << " by \"" << artist_ << "\"";
+    if (tags_.find("artist") != tags_.end()) {
+        os << " by \"" << tags_.at("artist") << "\"";
     } else {
         os << " by <Unknown>";
     }
-    if (!album_.empty()) {
-        os << " from \"" << album_ << "\"";
+    if (tags_.find("album") != tags_.end()) {
+        os << " from \"" << tags_.at("album") << "\"";
     }
-    if (!year_.empty()) {
-        os << " (" << year_ << ")";
+    if (tags_.find("originalyear") != tags_.end()) {
+        os << " (" << tags_.at("originalyear") << ")";
     }
     return os.str();
 }
