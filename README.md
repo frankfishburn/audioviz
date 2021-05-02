@@ -1,5 +1,13 @@
 # audioviz - music visualizer
 
+## Dependencies
+
+CMake
+FFmpeg
+GLEW
+libspectrogram
+SDL2
+
 ## Installation
 
 From the project root directory:
