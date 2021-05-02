@@ -10,7 +10,7 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 
-AudioPlayer::AudioPlayer(AudioSource &source) : source_(source) {
+AudioPlayer::AudioPlayer(const AudioSource &source) : source_(source) {
 
     SDL_AudioSpec want, have;
     SDL_memset(&want, 0, sizeof(want));
@@ -45,7 +45,7 @@ AudioPlayer::~AudioPlayer() {
 void AudioPlayer::callback(void* userdata, Uint8* stream, int len) {
     SDL_memset(stream, 0, len);
     AudioPlayer* am        = (AudioPlayer*)userdata;
-    Uint8*        audio_ptr = (Uint8*) am->source_.data();
+    const Uint8* audio_ptr = (Uint8*) am->source_.data().data();
     SDL_MixAudioFormat(stream, (Uint8*) audio_ptr + am->callback_offset_, AUDIO_F32, len, SDL_MIX_MAXVOLUME / 2);
     am->callback_offset_ += len;
 }

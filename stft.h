@@ -17,7 +17,7 @@ struct Spectrum {
 
 class STFT {
    public:
-    STFT(AudioSource& audio, SpectrogramConfig& conf, unsigned long insamples);
+    STFT(const AudioSource& audio, SpectrogramConfig& conf, unsigned long insamples);
     STFT(const STFT& orig);
     ~STFT();
 
@@ -35,9 +35,10 @@ class STFT {
     int           maxGoodFreq();
 
    private:
+    // Audio data
     int           num_channels;
     unsigned long num_samples;
-    float*        audio_ptr;
+    const float*  audio_ptr;
 
     // Configuration
     SpectrogramInput      props;

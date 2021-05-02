@@ -20,7 +20,7 @@ class AudioSource {
     std::string info() const;
 
     // Get pointer to audio data
-    float* data() { return data_.data(); };
+    const std::vector<float>& data() const { return data_; };
 
     // Query metadata
     std::string artist() const { return artist_; };

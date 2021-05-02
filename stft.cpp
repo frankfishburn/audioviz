@@ -11,16 +11,16 @@
 
 #include "stft.h"
 
-STFT::STFT(AudioSource& audio, SpectrogramConfig& inputconfig, unsigned long input_samples) {
-    num_channels = audio.num_channels();
-    num_samples  = audio.num_samples();
-    audio_ptr    = audio.data();
+STFT::STFT(const AudioSource& audio_source, SpectrogramConfig& inputconfig, unsigned long input_samples) {
+    num_channels = audio_source.num_channels();
+    num_samples  = audio_source.num_samples();
+    audio_ptr = audio_source.data().data();
 
     printf("%i  %lu\n", num_channels, num_samples);
 
     // Configure input data properties
     props.data_size   = sizeof(float);
-    props.sample_rate = audio.sample_rate();
+    props.sample_rate = audio_source.sample_rate();
     props.num_samples = input_samples;
     props.stride      = num_channels;
 

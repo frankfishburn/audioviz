@@ -8,7 +8,7 @@
 
 class AudioPlayer {
    public:
-    AudioPlayer(AudioSource& source);
+    AudioPlayer(const AudioSource& source);
     ~AudioPlayer();
 
     // Playback controls
@@ -27,7 +27,7 @@ class AudioPlayer {
 
    private:
     // The audio source
-    AudioSource& source_;
+    const AudioSource& source_;
 
     // Player state
     bool playable_ = false;
