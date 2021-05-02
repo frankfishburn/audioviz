@@ -1,17 +1,24 @@
 #ifndef FILE_AUDIO_SOURCE_H
 #define FILE_AUDIO_SOURCE_H
 
-#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 #include "i_source.h"
 
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libavutil/opt.h>
+#include <libswresample/swresample.h>
+}
+
 class FileAudioSource : public IAudioSource {
    public:
-    FileAudioSource(){};
-    FileAudioSource(std::string filename);
+    FileAudioSource();
+    ~FileAudioSource();
+    void open(std::string filename);
 
     // Query state
     bool loaded() const { return loaded_; };
@@ -43,6 +50,14 @@ class FileAudioSource : public IAudioSource {
     // Metadata
     std::string filename_;
     std::unordered_map<std::string, std::string> tags_;
+
+    // Parsing data structures
+    AVFormatContext *format;
+    AVCodecContext *context;
+    SwrContext *swr;
+    AVPacket *packet;
+    AVFrame *in_frame;
+    AVFrame *out_frame;
 };
 
 class AudioSourceError : virtual public std::exception {

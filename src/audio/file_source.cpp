@@ -1,60 +1,128 @@
 #include "file_source.h"
 
 #include <algorithm>  // min, max
-#include <string>
+#include <sstream>
 
-extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libavutil/opt.h>
-#include <libswresample/swresample.h>
+FileAudioSource::FileAudioSource() {
+    format = avformat_alloc_context();
+    context = avcodec_alloc_context3(NULL);
+    swr = swr_alloc();
+    packet = av_packet_alloc();
+    in_frame = av_frame_alloc();
+    out_frame = av_frame_alloc();
 }
 
-FileAudioSource::FileAudioSource(std::string filename) {
+FileAudioSource::~FileAudioSource() {
+    av_frame_free(&out_frame);
+    av_frame_free(&in_frame);
+    av_packet_free(&packet);
+
+    swr_close(swr);
+    swr_free(&swr);
+
+    avcodec_close(context);
+    avcodec_free_context(&context);
+
+    avformat_close_input(&format);
+    avformat_free_context(format);
+}
+
+void FileAudioSource::open(std::string filename) {
     int status;
-    AVFormatContext *format;
-    AVCodecContext *context;
     AVStream *stream;
     AVCodec *codec;
 
     // Open file
-    format = avformat_alloc_context();
     status = avformat_open_input(&format, filename.c_str(), NULL, NULL);
-    if (status != 0) {
-        avformat_free_context(format);
-        throw AudioSourceError(status, "avformat_open_input", "");
-    }
+    if (status != 0) throw AudioSourceError(status, "avformat_open_input", "");
 
     // Detect streams
     status = avformat_find_stream_info(format, NULL);
-    if (status < 0) {
-        avformat_close_input(&format);
-        avformat_free_context(format);
+    if (status < 0)
         throw AudioSourceError(status, "avformat_find_stream_info", "");
-    }
 
     // Determine best stream
     status = av_find_best_stream(format, AVMEDIA_TYPE_AUDIO, -1, -1, &codec, 0);
-    if (status == AVERROR_STREAM_NOT_FOUND) {
-        avformat_close_input(&format);
-        avformat_free_context(format);
+    if (status == AVERROR_STREAM_NOT_FOUND)
         throw AudioSourceError(status, "av_find_best_stream",
                                "Stream not found");
-    }
-    if (status == AVERROR_DECODER_NOT_FOUND) {
-        avformat_close_input(&format);
-        avformat_free_context(format);
+    if (status == AVERROR_DECODER_NOT_FOUND)
         throw AudioSourceError(status, "av_find_best_stream",
                                "Decoder not found");
-    }
 
     // Set selected stream
-    int streamidx = status;
-    stream = format->streams[streamidx];
+    const int stream_index = status;
+    stream = format->streams[stream_index];
     stream->need_parsing = AVSTREAM_PARSE_TIMESTAMPS;
+
+    // Setup decoder
+    avcodec_parameters_to_context(context, stream->codecpar);
+    status = avcodec_open2(context, codec, NULL);
+    if (status < 0) throw AudioSourceError(status, "avcodec_open2", "");
+
+    // prepare resampler
+    av_opt_set_int(swr, "in_channel_count", stream->codecpar->channels, 0);
+    av_opt_set_int(swr, "out_channel_count", 2, 0);
+    av_opt_set_int(swr, "in_channel_layout", stream->codecpar->channel_layout,
+                   0);
+    av_opt_set_int(swr, "out_channel_layout", AV_CH_LAYOUT_STEREO, 0);
+    av_opt_set_int(swr, "in_sample_rate", stream->codecpar->sample_rate, 0);
+    av_opt_set_int(swr, "out_sample_rate", stream->codecpar->sample_rate, 0);
+    av_opt_set_sample_fmt(swr, "in_sample_fmt", context->sample_fmt, 0);
+    av_opt_set_sample_fmt(swr, "out_sample_fmt", AV_SAMPLE_FMT_FLT, 0);
+    swr_init(swr);
+    if (!swr_is_initialized(swr))
+        throw AudioSourceError(-1, "swr_init",
+                               "Resampler couldn't be initialized");
+
+    // prepare to read data
+    av_init_packet(packet);
+
+    // iterate through frames
+    unsigned long oldsize = 0;
+    unsigned long newsize = 0;
+    while (av_read_frame(format, packet) >= 0) {
+        if (packet->stream_index != stream_index) {
+            continue;
+        }
+
+        status = avcodec_send_packet(context, packet);
+        if (status < 0)
+            throw AudioSourceError(status, "avcodec_send_packet",
+                                   "Packet error");
+
+        status = avcodec_receive_frame(context, in_frame);
+        if (status < 0)
+            throw AudioSourceError(status, "avcodec_receive_frame",
+                                   "Frame error");
+
+        av_frame_copy_props(out_frame, in_frame);
+        out_frame->channel_layout = AV_CH_LAYOUT_STEREO;
+        out_frame->format = AV_SAMPLE_FMT_FLT;
+        out_frame->sample_rate = in_frame->sample_rate;
+
+        status = swr_convert_frame(swr, out_frame, in_frame);
+        if (status != 0)
+            throw AudioSourceError(status, "swr_convert_frame",
+                                   "Resample error");
+
+        oldsize = newsize;
+        newsize = oldsize + out_frame->nb_samples * out_frame->channels;
+
+        // Expand array and copy frame contents
+        data_.resize(newsize);
+        memcpy(data_.data() + oldsize, out_frame->data[0],
+               out_frame->nb_samples * out_frame->channels * sizeof(float));
+
+        // Close packet/frame
+        av_frame_unref(out_frame);
+        av_frame_unref(in_frame);
+        av_packet_unref(packet);
+    }
 
     // Set stream properties
     num_channels_ = stream->codecpar->channels;
+    num_samples_ = newsize / num_channels_;
     sample_rate_ = stream->codecpar->sample_rate;
     filename_ = filename;
     loaded_ = true;
@@ -66,111 +134,6 @@ FileAudioSource::FileAudioSource(std::string filename) {
         if (tag == NULL) break;
         tags_.insert({tag->key, tag->value});
     }
-
-    // Setup decoder
-    context = avcodec_alloc_context3(codec);
-    avcodec_parameters_to_context(context, stream->codecpar);
-    status = avcodec_open2(context, codec, NULL);
-    if (status < 0) {
-        avcodec_free_context(&context);
-        avformat_close_input(&format);
-        avformat_free_context(format);
-        throw AudioSourceError(status, "avcodec_open2", "");
-    }
-
-    // prepare resampler
-    struct SwrContext *swr = swr_alloc();
-    av_opt_set_int(swr, "in_channel_count", stream->codecpar->channels, 0);
-    av_opt_set_int(swr, "out_channel_count", 2, 0);
-    av_opt_set_int(swr, "in_channel_layout", stream->codecpar->channel_layout,
-                   0);
-    av_opt_set_int(swr, "out_channel_layout", AV_CH_LAYOUT_STEREO, 0);
-    av_opt_set_int(swr, "in_sample_rate", stream->codecpar->sample_rate, 0);
-    av_opt_set_int(swr, "out_sample_rate", stream->codecpar->sample_rate, 0);
-    av_opt_set_sample_fmt(swr, "in_sample_fmt", context->sample_fmt, 0);
-    av_opt_set_sample_fmt(swr, "out_sample_fmt", AV_SAMPLE_FMT_FLT, 0);
-    swr_init(swr);
-    if (!swr_is_initialized(swr)) {
-        swr_free(&swr);
-        avcodec_close(context);
-        avcodec_free_context(&context);
-        avformat_close_input(&format);
-        avformat_free_context(format);
-        throw AudioSourceError(-1, "swr_init",
-                               "Resampler couldn't be initialized");
-    }
-
-    // prepare to read data
-    AVPacket *packet = av_packet_alloc();
-    av_init_packet(packet);
-
-    AVFrame *frame = av_frame_alloc();
-    AVFrame *outframe = av_frame_alloc();
-
-    if (!frame || !outframe) {
-        throw AudioSourceError(-1, "av_frame_alloc", "Couldn't allocate frame");
-    }
-
-    // iterate through frames
-    unsigned long oldsize = 0;
-    unsigned long newsize = 0;
-    while (av_read_frame(format, packet) >= 0) {
-        if (packet->stream_index != streamidx) {
-            continue;
-        }
-
-        status = avcodec_send_packet(context, packet);
-        if (status < 0) {
-            throw AudioSourceError(status, "avcodec_send_packet",
-                                   "Packet error");
-        }
-
-        status = avcodec_receive_frame(context, frame);
-        if (status < 0) {
-            throw AudioSourceError(status, "avcodec_receive_frame",
-                                   "Frame error");
-        }
-
-        av_frame_copy_props(outframe, frame);
-        outframe->channel_layout = AV_CH_LAYOUT_STEREO;
-        outframe->format = AV_SAMPLE_FMT_FLT;
-        outframe->sample_rate = frame->sample_rate;
-
-        status = swr_convert_frame(swr, outframe, frame);
-        if (status != 0) {
-            throw AudioSourceError(status, "swr_convert_frame",
-                                   "Resample error");
-        }
-
-        oldsize = newsize;
-        newsize = oldsize + outframe->nb_samples * outframe->channels;
-
-        // Expand array and copy frame contents
-        data_.resize(newsize);
-        memcpy(data_.data() + oldsize, outframe->data[0],
-               outframe->nb_samples * outframe->channels * sizeof(float));
-
-        // Close packet/frame
-        av_frame_unref(outframe);
-        av_frame_unref(frame);
-        av_packet_unref(packet);
-    }
-
-    num_samples_ = newsize / num_channels_;
-
-    // clean up
-    av_frame_free(&outframe);
-    av_frame_free(&frame);
-    av_packet_free(&packet);
-
-    swr_close(swr);
-    swr_free(&swr);
-
-    avcodec_close(context);
-    avcodec_free_context(&context);
-
-    avformat_close_input(&format);
-    avformat_free_context(format);
 }
 
 std::string FileAudioSource::info() const {

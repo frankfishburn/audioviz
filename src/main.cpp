@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
     // Load audio file
     FileAudioSource audio_source;
     try {
-        audio_source = FileAudioSource(argv[1]);
+        audio_source.open(argv[1]);
     } catch (const AudioSourceError& e) {
         std::cerr << "Error loading audio source:" << std::endl;
         std::cerr << e.what() << std::endl;
