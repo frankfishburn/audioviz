@@ -1,3 +1,5 @@
+#include "stft.h"
+
 #include <algorithm>  // min,max
 #include <cmath>      // INFINITY
 
@@ -9,15 +11,11 @@
 #include <fstream>  // write csv
 #endif
 
-#include "stft.h"
-
-STFT::STFT(const AudioSource &audio_source, SpectrogramConfig &inputconfig,
+STFT::STFT(const IAudioSource &audio_source, SpectrogramConfig &inputconfig,
            unsigned long input_samples) {
     num_channels = audio_source.num_channels();
     num_samples = audio_source.num_samples();
     audio_ptr = audio_source.data().data();
-
-    printf("%i  %lu\n", num_channels, num_samples);
 
     // Configure input data properties
     props.data_size = sizeof(float);

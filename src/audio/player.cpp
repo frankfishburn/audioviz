@@ -1,4 +1,4 @@
-#include "audio/player.h"
+#include "player.h"
 
 #include <SDL2/SDL.h>  // Audio playback
 
@@ -11,7 +11,7 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 
-AudioPlayer::AudioPlayer(const AudioSource &source) : source_(source) {
+AudioPlayer::AudioPlayer(const IAudioSource &source) : source_(source) {
     SDL_AudioSpec want, have;
     SDL_memset(&want, 0, sizeof(want));
     want.freq = source_.sample_rate();

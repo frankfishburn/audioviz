@@ -1,18 +1,20 @@
-#ifndef AUDIO_SOURCE_H
-#define AUDIO_SOURCE_H
+#ifndef FILE_AUDIO_SOURCE_H
+#define FILE_AUDIO_SOURCE_H
 
 #include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-class AudioSource {
+#include "i_source.h"
+
+class FileAudioSource : public IAudioSource {
    public:
-    AudioSource(){};
-    AudioSource(std::string filename);
+    FileAudioSource(){};
+    FileAudioSource(std::string filename);
 
     // Query state
-    bool loaded() { return loaded_; };
+    bool loaded() const { return loaded_; };
 
     // Query audio file properties
     unsigned long num_channels() const { return num_channels_; };
@@ -53,4 +55,4 @@ class AudioSourceError : virtual public std::exception {
     std::string message;
 };
 
-#endif /* AUDIO_SOURCE_H */
+#endif /* FILE_AUDIO_SOURCE_H */

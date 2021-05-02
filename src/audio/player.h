@@ -4,11 +4,11 @@
 #include <string>
 #include <vector>
 
-#include "audio/source.h"
+#include "i_source.h"
 
 class AudioPlayer {
    public:
-    AudioPlayer(const AudioSource &source);
+    AudioPlayer(const IAudioSource &source);
     ~AudioPlayer();
 
     // Playback controls
@@ -27,7 +27,7 @@ class AudioPlayer {
 
    private:
     // The audio source
-    const AudioSource &source_;
+    const IAudioSource &source_;
 
     // Player state
     bool playable_ = false;

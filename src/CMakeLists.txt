@@ -2,9 +2,9 @@ add_executable(
   audioviz 
   main.cpp 
   algorithm/interpolant.cpp 
-  algorithm/stft.cpp 
+  algorithm/stft.cpp
+  audio/file_source.cpp  
   audio/player.cpp 
-  audio/source.cpp 
   video/framebuffer.cpp 
   video/shader_program.cpp 
   video/window.cpp 

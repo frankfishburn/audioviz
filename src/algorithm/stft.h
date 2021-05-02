@@ -1,11 +1,12 @@
 #ifndef STFT_H
 #define STFT_H
 
+#include <spectrogram.h>
+
 #include <vector>
 
-#include "audio/source.h"
+#include "audio/i_source.h"
 #include "interpolant.h"
-#include "spectrogram.h"
 
 struct Spectrum {
     int length;
@@ -18,7 +19,7 @@ struct Spectrum {
 
 class STFT {
    public:
-    STFT(const AudioSource &audio, SpectrogramConfig &conf,
+    STFT(const IAudioSource &audio, SpectrogramConfig &conf,
          unsigned long insamples);
     STFT(const STFT &orig);
     ~STFT();

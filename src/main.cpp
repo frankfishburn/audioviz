@@ -6,8 +6,8 @@
 #include <vector>
 
 #include "algorithm/stft.h"
+#include "audio/file_source.h"
 #include "audio/player.h"
-#include "audio/source.h"
 #include "vfx/liquid/effect.h"
 #include "video/framebuffer.h"
 #include "video/shader_program.h"
@@ -22,9 +22,9 @@ int main(int argc, char** argv) {
     }
 
     // Load audio file
-    AudioSource audio_source;
+    FileAudioSource audio_source;
     try {
-        audio_source = AudioSource(argv[1]);
+        audio_source = FileAudioSource(argv[1]);
     } catch (const AudioSourceError& e) {
         std::cerr << "Error loading audio source:" << std::endl;
         std::cerr << e.what() << std::endl;

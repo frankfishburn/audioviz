@@ -1,4 +1,4 @@
-#include "audio/source.h"
+#include "file_source.h"
 
 #include <algorithm>  // min, max
 #include <string>
@@ -10,7 +10,7 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 
-AudioSource::AudioSource(std::string filename) {
+FileAudioSource::FileAudioSource(std::string filename) {
     int status;
     AVFormatContext *format;
     AVCodecContext *context;
@@ -173,7 +173,7 @@ AudioSource::AudioSource(std::string filename) {
     avformat_free_context(format);
 }
 
-std::string AudioSource::info() const {
+std::string FileAudioSource::info() const {
     std::ostringstream os;
     os << "Filename:      " << filename_ << std::endl;
     os << "# of samples:  " << num_samples_ << std::endl;
@@ -182,7 +182,7 @@ std::string AudioSource::info() const {
     return os.str();
 }
 
-std::string AudioSource::description() const {
+std::string FileAudioSource::description() const {
     std::ostringstream os;
     if (tags_.find("title") != tags_.end()) {
         os << "\"" << tags_.at("title") << "\"";
