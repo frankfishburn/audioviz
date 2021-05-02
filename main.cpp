@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "audio_player.h"
+#include "audio_source.h"
 #include "framebuffer.h"
 #include "shader_program.h"
 #include "stft.h"
@@ -22,16 +23,25 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
-    // Load audio and setup playback
-    AudioPlayer audio(argv[1]);
-
-    if (!audio.is_playable() || audio.get_num_samples() == 0) {
-        fprintf(stderr, "Audio problem, bailing out!\n");
-        fflush(stderr);
-        return 1;
+    // Load audio file
+    AudioSource audio_source;
+    try {
+        audio_source = AudioSource(argv[1]);
+    } catch (const AudioSourceError& e) {
+        std::cerr << "Error loading audio source:" << std::endl;
+        std::cerr << e.what() << std::endl;
+        std::cerr << "Exiting" << std::endl;
+        return EXIT_FAILURE;
     }
 
-    audio.print();
+    AudioPlayer audio_player = AudioPlayer(audio_source);
+
+    if (!audio_player.playable() || audio_source.num_samples() == 0) {
+        std::cerr << "Audio problem, bailing out!" << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    std::cout << "Playing " << audio_source.description() << std::endl;
 
     // Configure spectrogram transform
     SpectrogramConfig config;
@@ -42,7 +52,7 @@ int main(int argc, char** argv) {
     config.window_type      = HAMMING;
 
     // Create STFT object
-    STFT stft(audio, config, 4096 * 2);
+    STFT stft(audio_source, config, 4096 * 2);
 
     // Analyze for maximum power
     stft.analyze();
@@ -69,7 +79,7 @@ int main(int argc, char** argv) {
     wnd.check_errors();
 
     // Start audio
-    audio.play();
+    audio_player.play();
     double        start_time   = 0;
     double        current_time = 0;
     std::string   current_time_str;
@@ -99,17 +109,17 @@ int main(int argc, char** argv) {
                 case SDL_KEYDOWN:
                     switch (e.key.keysym.sym) {
                         case SDLK_SPACE:
-                            audio.toggle_playback();
+                            audio_player.toggle_playback();
                             break;
                         case SDLK_LEFT:
-                            audio.back();
-                            start_time    = audio.get_current_time();
+                            audio_player.back();
+                            start_time    = audio_player.current_time();
                             frame_count   = 0;
                             force_refresh = true;
                             break;
                         case SDLK_RIGHT:
-                            audio.forward();
-                            start_time    = audio.get_current_time();
+                            audio_player.forward();
+                            start_time    = audio_player.current_time();
                             frame_count   = 0;
                             force_refresh = true;
                             break;
@@ -137,7 +147,7 @@ int main(int argc, char** argv) {
         }
 
         // Compute current STFT
-        long current_sample = audio.get_current_sample();
+        long current_sample = audio_player.current_sample();
         stft.compute(current_sample);
 
         // Render visual effects to framebuffer
@@ -150,10 +160,10 @@ int main(int argc, char** argv) {
         wnd.swap();
 
         // Display framerate info
-        if (audio.is_playing()) {
+        if (audio_player.playing()) {
             frame_count++;
-            current_time     = audio.get_current_time();
-            current_time_str = audio.get_current_time_str();
+            current_time     = audio_player.current_time();
+            current_time_str = audio_player.current_time_str();
             if ((current_time - start_time) >= 2 || force_refresh) {
                 printf("\r%s (fps: %4.4f)", current_time_str.c_str(), frame_count / (current_time - start_time));
                 fflush(stdout);
@@ -165,8 +175,8 @@ int main(int argc, char** argv) {
     }
 
     // Cleanup
-    audio.pause();
-    printf("\r\n");
+    audio_player.pause();
+    std::cout << endl;
 
-    return 0;
+    return EXIT_SUCCESS;
 }

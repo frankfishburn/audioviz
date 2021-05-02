@@ -4,11 +4,12 @@
 #include <string>
 #include <vector>
 
+#include "audio_source.h"
+
 class AudioPlayer {
    public:
-    AudioPlayer(const char* filename);
-    AudioPlayer(const AudioPlayer& orig);
-    virtual ~AudioPlayer();
+    AudioPlayer(AudioSource& source);
+    ~AudioPlayer();
 
     // Playback controls
     void play();
@@ -18,53 +19,27 @@ class AudioPlayer {
     void forward();
 
     // Query player state
-    bool          is_loaded() { return isLoaded; };
-    bool          is_playable() { return isPlayable; };
-    bool          is_playing() { return isPlaying; };
-    unsigned long get_current_sample();
-    double        get_current_time();
-    std::string   get_current_time_str();
-
-    // Query audio file properties
-    unsigned long get_num_channels() { return num_channels; };
-    unsigned long get_num_samples() { return num_samples; };
-    unsigned long get_sample_rate() { return sample_rate; };
-    float*        get_data() { return data.data(); };
-
-    // Query metadata
-    std::string get_artist() { return artist; };
-    std::string get_album() { return album; };
-    std::string get_title() { return title; };
-    std::string get_year() { return year; };
-    void        print();
+    bool          playable() const { return playable_; };
+    bool          playing() const { return playing_; };
+    unsigned long current_sample();
+    double        current_time();
+    std::string   current_time_str();
 
    private:
+    // The audio source
+    AudioSource& source_;
+
     // Player state
-    bool isLoaded   = false;
-    bool isPlayable = false;
-    bool isPlaying  = false;
+    bool playable_ = false;
+    bool playing_  = false;
 
     // Player timing data
-    unsigned long timer_start     = 0;
-    unsigned long timer_offset    = 0;
-    unsigned long callback_offset = 0;
-
-    // Audio file properties
-    unsigned long      num_channels = 0;
-    unsigned long      num_samples  = 0;
-    unsigned long      sample_rate  = 0;
-    std::vector<float> data;
-    std::string        input_file;
-
-    // Metadata
-    std::string artist;
-    std::string album;
-    std::string title;
-    std::string year;
+    unsigned long timer_start_;
+    unsigned long timer_offset_;
+    unsigned long callback_offset_;
 
     // Initialization
-    void        load_file();       // File
-    void        setup_playback();  // Player
+    void        setup_playback();
     static void callback(void* userdata, uint8_t* stream, int len);
     void        update_offset();
 };
