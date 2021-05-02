@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "audio_source.h"
+#include "audio/source.h"
 
 class AudioPlayer {
    public:

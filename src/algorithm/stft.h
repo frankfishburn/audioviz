@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "audio_source.h"
+#include "audio/source.h"
 #include "interpolant.h"
 #include "spectrogram.h"
 

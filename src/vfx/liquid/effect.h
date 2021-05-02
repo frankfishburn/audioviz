@@ -4,9 +4,9 @@
 #include <string>
 #include <vector>
 
-#include "framebuffer.h"
-#include "shader_program.h"
-#include "stft.h"
+#include "algorithm/stft.h"
+#include "video/framebuffer.h"
+#include "video/shader_program.h"
 
 class FXLiquid {
    public:

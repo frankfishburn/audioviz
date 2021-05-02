@@ -5,13 +5,13 @@
 #include <memory>
 #include <vector>
 
-#include "audio_player.h"
-#include "audio_source.h"
-#include "framebuffer.h"
-#include "shader_program.h"
-#include "stft.h"
+#include "algorithm/stft.h"
+#include "audio/player.h"
+#include "audio/source.h"
 #include "vfx/liquid/effect.h"
-#include "window.h"
+#include "video/framebuffer.h"
+#include "video/shader_program.h"
+#include "video/window.h"
 
 using namespace std;
 
