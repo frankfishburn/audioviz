@@ -2,11 +2,11 @@
 
 ## Dependencies
 
-CMake
-FFmpeg
-GLEW
-libspectrogram
-SDL2
+- CMake
+- FFmpeg
+- GLEW
+- libspectrogram
+- SDL2
 
 ## Installation
 
