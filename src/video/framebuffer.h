@@ -6,7 +6,7 @@
 
 class FrameBuffer {
    public:
-    FrameBuffer(Window *wnd, bool doMSAA);
+    FrameBuffer(const Window &window, bool do_msaa);
     virtual ~FrameBuffer();
     void bind();
     void unbind();
@@ -25,13 +25,14 @@ class FrameBuffer {
     bool msaa_enabled() { return do_msaa; }
 
    private:
+    const Window &window;
+    bool do_msaa = true;
+
     const int num_buffers = 2;
     int num_samples;
     bool do_bloom = true;
-    bool do_msaa = true;
     bool bg_black = true;
     GLenum GL_TEXTURE_TYPE;
-    Window *window;
     GLuint buffer[3];
     GLuint texture[3];
 

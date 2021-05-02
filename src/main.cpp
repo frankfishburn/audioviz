@@ -56,10 +56,10 @@ int main(int argc, char** argv) {
     stft.analyze();
 
     // Initialize window and context
-    Window wnd;
+    Window window;
 
     // Create a framebuffer
-    FrameBuffer fb(&wnd, true);
+    FrameBuffer fb(window, true);
 
     // Setup visual effect renderer
     FXLiquid vfx(&stft, &fb);
@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
     glDepthMask(false);
 
     // Check for GL errors
-    wnd.check_errors();
+    window.check_errors();
 
     // Start audio
     audio_player.play();
@@ -128,7 +128,7 @@ int main(int argc, char** argv) {
                             quit = true;
                             break;
                         case SDLK_f:
-                            wnd.toggle_fullscreen();
+                            window.toggle_fullscreen();
                             break;
                         case SDLK_b:
                             fb.toggle_bloom();
@@ -155,7 +155,7 @@ int main(int argc, char** argv) {
         fb.draw();
 
         // Swap windows
-        wnd.swap();
+        window.swap();
 
         // Display framerate info
         if (audio_player.playing()) {

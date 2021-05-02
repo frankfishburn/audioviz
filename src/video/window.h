@@ -11,8 +11,8 @@ class Window {
     void check_errors();
     void swap();
     void toggle_fullscreen();
-    int width();
-    int height();
+    int width() const;
+    int height() const;
 
    private:
     int status;

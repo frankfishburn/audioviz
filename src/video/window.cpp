@@ -57,13 +57,13 @@ void Window::toggle_fullscreen() {
     }
 }
 
-int Window::width() {
+int Window::width() const {
     int width;
     SDL_GetWindowSize(window, &width, NULL);
     return width;
 }
 
-int Window::height() {
+int Window::height() const {
     int height;
     SDL_GetWindowSize(window, NULL, &height);
     return height;
