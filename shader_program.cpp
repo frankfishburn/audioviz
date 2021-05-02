@@ -5,9 +5,10 @@
 #include <iostream>
 #include <vector>
 
-ShaderProgram::ShaderProgram(const char* vertex_source, const char* fragment_source) {
+ShaderProgram::ShaderProgram(const char *vertex_source,
+                             const char *fragment_source) {
     // Allocate shaders
-    vertex_shader   = glCreateShader(GL_VERTEX_SHADER);
+    vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
 
     // Compile shaders
@@ -23,9 +24,7 @@ ShaderProgram::ShaderProgram(const ShaderProgram& orig) {
 }
 */
 
-ShaderProgram::~ShaderProgram() {
-    glDeleteProgram(program);
-}
+ShaderProgram::~ShaderProgram() { glDeleteProgram(program); }
 
 bool ShaderProgram::isok() {
     GLint linked;
@@ -33,9 +32,7 @@ bool ShaderProgram::isok() {
     return (linked == 1);
 }
 
-void ShaderProgram::use() {
-    glUseProgram(program);
-}
+void ShaderProgram::use() { glUseProgram(program); }
 
 void ShaderProgram::print_errors() {
     // Print GL errors
@@ -45,10 +42,10 @@ void ShaderProgram::print_errors() {
     }
 }
 
-void ShaderProgram::compile_shader(GLuint& shader, const char* shaderSource) {
+void ShaderProgram::compile_shader(GLuint &shader, const char *shaderSource) {
     // Prepend version info
-    std::string tmp_source     = GLSL_version;
-    const char* tmp_source_str = tmp_source.append(shaderSource).c_str();
+    std::string tmp_source = GLSL_version;
+    const char *tmp_source_str = tmp_source.append(shaderSource).c_str();
 
     // Create shader and compile
     glShaderSource(shader, 1, &tmp_source_str, NULL);
@@ -66,8 +63,7 @@ void ShaderProgram::compile_shader(GLuint& shader, const char* shaderSource) {
 
         fprintf(stderr, "Shader compilation failed\n");
         fprintf(stderr, "Shader source:\n%s\n\n", tmp_source_str);
-        for (auto i : infoLog)
-            std::cerr << i;
+        for (auto i : infoLog) std::cerr << i;
         fprintf(stderr, "\n\n");
 
         glDeleteShader(shader);
@@ -92,61 +88,61 @@ void ShaderProgram::link_shaders() {
         glGetProgramInfoLog(program, maxLength, &maxLength, &infoLog[0]);
 
         fprintf(stderr, "Shader linking failed\n");
-        for (auto i : infoLog)
-            std::cerr << i;
+        for (auto i : infoLog) std::cerr << i;
 
         fprintf(stderr, "\n\n");
-
     } else {
         use();
     }
 }
 
-void ShaderProgram::set_uniform(const char* name, int value) {
+void ShaderProgram::set_uniform(const char *name, int value) {
     glUseProgram(program);
     GLint uniform = glGetUniformLocation(program, name);
     glUniform1i(uniform, value);
 }
 
-void ShaderProgram::set_uniform(const char* name, float value) {
+void ShaderProgram::set_uniform(const char *name, float value) {
     glUseProgram(program);
     GLint uniform = glGetUniformLocation(program, name);
     glUniform1f(uniform, value);
 }
 
-void ShaderProgram::set_uniform(const char* name, float value1, float value2) {
+void ShaderProgram::set_uniform(const char *name, float value1, float value2) {
     glUseProgram(program);
     GLint uniform = glGetUniformLocation(program, name);
     glUniform2f(uniform, value1, value2);
 }
 
-void ShaderProgram::set_uniform(const char* name, float value1, float value2, float value3) {
+void ShaderProgram::set_uniform(const char *name, float value1, float value2,
+                                float value3) {
     glUseProgram(program);
     GLint uniform = glGetUniformLocation(program, name);
     glUniform3f(uniform, value1, value2, value3);
 }
 
-void ShaderProgram::set_attrib(const char* name) {
-    set_attrib(name, 1, 0, 0);
-}
+void ShaderProgram::set_attrib(const char *name) { set_attrib(name, 1, 0, 0); }
 
-void ShaderProgram::set_attrib(const char* name, int N) {
+void ShaderProgram::set_attrib(const char *name, int N) {
     set_attrib(name, N, N * sizeof(float), 0);
 }
 
-void ShaderProgram::set_attrib(const char* name, int N, size_t stride) {
+void ShaderProgram::set_attrib(const char *name, int N, size_t stride) {
     set_attrib(name, N, stride, 0);
 }
 
-void ShaderProgram::set_attrib(const char* name, int N, size_t stride, size_t offset) {
+void ShaderProgram::set_attrib(const char *name, int N, size_t stride,
+                               size_t offset) {
     glUseProgram(program);
     GLint attrib = glGetAttribLocation(program, name);
     glEnableVertexAttribArray(attrib);
-    glVertexAttribPointer(attrib, N, GL_FLOAT, GL_FALSE, stride, (void*)offset);
+    glVertexAttribPointer(attrib, N, GL_FLOAT, GL_FALSE, stride,
+                          (void *)offset);
 }
 
 /*
-int ShaderProgram::setup_shaders_source(GLuint &shaderProgram, const char* vs_source, const char* fs_source) {
+int ShaderProgram::setup_shaders_source(GLuint &shaderProgram, const char*
+vs_source, const char* fs_source) {
 
     // Compile shaders
     GLuint vertexShader = compile_shader(vs_source,GL_VERTEX_SHADER);
@@ -169,13 +165,15 @@ int ShaderProgram::setup_shaders_source(GLuint &shaderProgram, const char* vs_so
     return status;
 }
 
-int ShaderProgram::setup_shaders_filename(GLuint &shaderProgram, const char* vs_filename, const char* fs_filename) {
+int ShaderProgram::setup_shaders_filename(GLuint &shaderProgram, const char*
+vs_filename, const char* fs_filename) {
 
     // Load shader files
     std::string vertexSource = read_file(vs_filename);
     std::string fragmentSource = read_file(fs_filename);
 
-    return setup_shaders_source(shaderProgram, vertexSource.c_str(), fragmentSource.c_str());
+    return setup_shaders_source(shaderProgram, vertexSource.c_str(),
+fragmentSource.c_str());
 }
 
 std::string ShaderProgram::read_txt_file(const char* filename){

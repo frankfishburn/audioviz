@@ -11,12 +11,12 @@ class Window {
     void check_errors();
     void swap();
     void toggle_fullscreen();
-    int  width();
-    int  height();
+    int width();
+    int height();
 
    private:
-    int           status;
-    SDL_Window*   window;
+    int status;
+    SDL_Window *window;
     SDL_GLContext context;
 };
 

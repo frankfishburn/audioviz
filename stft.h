@@ -2,23 +2,25 @@
 #define STFT_H
 
 #include <vector>
+
 #include "audio_source.h"
 #include "interpolant.h"
 #include "spectrogram.h"
 
 struct Spectrum {
-    int                length;
+    int length;
     std::vector<float> freq;
     std::vector<float> power;
-    float              maxpower;
-    float              sumpower;
-    float              deltasumpower;
+    float maxpower;
+    float sumpower;
+    float deltasumpower;
 };
 
 class STFT {
    public:
-    STFT(const AudioSource& audio, SpectrogramConfig& conf, unsigned long insamples);
-    STFT(const STFT& orig);
+    STFT(const AudioSource &audio, SpectrogramConfig &conf,
+         unsigned long insamples);
+    STFT(const STFT &orig);
     ~STFT();
 
     // Methods
@@ -28,35 +30,35 @@ class STFT {
     void compute(const int channel, const long sample_index);
 
     // Accessors
-    Spectrum      getSpectrum(int ch) { return result[ch]; };
-    unsigned int  numChannels() { return num_channels; };
+    Spectrum getSpectrum(int ch) { return result[ch]; };
+    unsigned int numChannels() { return num_channels; };
     unsigned long numSamples() { return props.num_samples; };
     unsigned long numFreq() { return result[0].length; };
-    int           maxGoodFreq();
+    int maxGoodFreq();
 
    private:
     // Audio data
-    int           num_channels;
+    int num_channels;
     unsigned long num_samples;
-    const float*  audio_ptr;
+    const float *audio_ptr;
 
     // Configuration
-    SpectrogramInput      props;
-    SpectrogramConfig     config;
-    SpectrogramTransform* program;
-    interpolant*          interpolator;
+    SpectrogramInput props;
+    SpectrogramConfig config;
+    SpectrogramTransform *program;
+    interpolant *interpolator;
 
     // Temporaries
     std::vector<float> temp_freq;
     std::vector<float> temp_power;
-    unsigned long      temp_freq_len;
+    unsigned long temp_freq_len;
 
     // Output
     std::vector<Spectrum> result;
 
     // Internal whole-file properties
-    float maxmaxpower      = 1.0;
-    float maxsumpower      = 1.0;
+    float maxmaxpower = 1.0;
+    float maxsumpower = 1.0;
     float maxdeltasumpower = 1.0;
 };
 

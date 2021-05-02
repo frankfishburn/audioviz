@@ -6,14 +6,14 @@
 
 class FrameBuffer {
    public:
-    FrameBuffer(Window* wnd, bool doMSAA);
+    FrameBuffer(Window *wnd, bool doMSAA);
     virtual ~FrameBuffer();
     void bind();
     void unbind();
     void draw();
     void freshen();
-    int  width() { return width_; }
-    int  height() { return height_; }
+    int width() { return width_; }
+    int height() { return height_; }
     void set_bloom(bool in) { do_bloom = in; }
     void toggle_bloom() { do_bloom = !do_bloom; }
     void toggle_msaa() {
@@ -26,23 +26,23 @@ class FrameBuffer {
 
    private:
     const int num_buffers = 2;
-    int       num_samples;
-    bool      do_bloom = true;
-    bool      do_msaa  = true;
-    bool      bg_black = true;
-    GLenum    GL_TEXTURE_TYPE;
-    Window*   window;
-    GLuint    buffer[3];
-    GLuint    texture[3];
+    int num_samples;
+    bool do_bloom = true;
+    bool do_msaa = true;
+    bool bg_black = true;
+    GLenum GL_TEXTURE_TYPE;
+    Window *window;
+    GLuint buffer[3];
+    GLuint texture[3];
 
-    ShaderProgram* copy_shader;
-    ShaderProgram* hblur_shader;
-    ShaderProgram* vblur_shader;
-    void           init();
-    void           deinit();
-    void           apply_bloom();
-    int            width_;
-    int            height_;
+    ShaderProgram *copy_shader;
+    ShaderProgram *hblur_shader;
+    ShaderProgram *vblur_shader;
+    void init();
+    void deinit();
+    void apply_bloom();
+    int width_;
+    int height_;
 };
 
 #endif /* FRAMEBUFFER_H */

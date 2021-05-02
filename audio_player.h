@@ -8,7 +8,7 @@
 
 class AudioPlayer {
    public:
-    AudioPlayer(const AudioSource& source);
+    AudioPlayer(const AudioSource &source);
     ~AudioPlayer();
 
     // Playback controls
@@ -19,19 +19,19 @@ class AudioPlayer {
     void forward();
 
     // Query player state
-    bool          playable() const { return playable_; };
-    bool          playing() const { return playing_; };
+    bool playable() const { return playable_; };
+    bool playing() const { return playing_; };
     unsigned long current_sample();
-    double        current_time();
-    std::string   current_time_str();
+    double current_time();
+    std::string current_time_str();
 
    private:
     // The audio source
-    const AudioSource& source_;
+    const AudioSource &source_;
 
     // Player state
     bool playable_ = false;
-    bool playing_  = false;
+    bool playing_ = false;
 
     // Player timing data
     unsigned long timer_start_;
@@ -39,9 +39,9 @@ class AudioPlayer {
     unsigned long callback_offset_;
 
     // Initialization
-    void        setup_playback();
-    static void callback(void* userdata, uint8_t* stream, int len);
-    void        update_offset();
+    void setup_playback();
+    static void callback(void *userdata, uint8_t *stream, int len);
+    void update_offset();
 };
 
 #endif /* AUDIO_PLAYER_H */

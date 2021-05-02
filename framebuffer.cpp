@@ -1,30 +1,30 @@
 #include "framebuffer.h"
 
-const char* src_copy_vert =
+const char *src_copy_vert =
 #include "shaders/copy_vert.glsl"
     ;
-const char* src_copy_frag_noMSAA =
+const char *src_copy_frag_noMSAA =
 #include "shaders/copy_frag_noMSAA.glsl"
     ;
-const char* src_blurh_frag_noMSAA =
+const char *src_blurh_frag_noMSAA =
 #include "shaders/blurh_frag_noMSAA.glsl"
     ;
-const char* src_blurv_frag_noMSAA =
+const char *src_blurv_frag_noMSAA =
 #include "shaders/blurv_frag_noMSAA.glsl"
     ;
 
-const char* src_copy_frag_MSAA =
+const char *src_copy_frag_MSAA =
 #include "shaders/copy_frag_MSAA.glsl"
     ;
-const char* src_blurh_frag_MSAA =
+const char *src_blurh_frag_MSAA =
 #include "shaders/blurh_frag_MSAA.glsl"
     ;
-const char* src_blurv_frag_MSAA =
+const char *src_blurv_frag_MSAA =
 #include "shaders/blurv_frag_MSAA.glsl"
     ;
 
-FrameBuffer::FrameBuffer(Window* wnd, bool doMSAA) {
-    window  = wnd;
+FrameBuffer::FrameBuffer(Window *wnd, bool doMSAA) {
+    window = wnd;
     do_msaa = doMSAA;
 
     // Initialize framebuffer
@@ -41,7 +41,7 @@ FrameBuffer::~FrameBuffer() {
 void FrameBuffer::init() {
     if (do_msaa) {  // MSAA
 
-        num_samples     = 5;
+        num_samples = 5;
         GL_TEXTURE_TYPE = GL_TEXTURE_2D_MULTISAMPLE;
 
         // Setup copy shader
@@ -54,10 +54,9 @@ void FrameBuffer::init() {
 
         vblur_shader = new ShaderProgram(src_copy_vert, src_blurv_frag_MSAA);
         vblur_shader->set_uniform("num_samples", num_samples);
-
     } else {  // No MSAA
 
-        num_samples     = 1;
+        num_samples = 1;
         GL_TEXTURE_TYPE = GL_TEXTURE_2D;
 
         // Setup copy shader
@@ -69,7 +68,7 @@ void FrameBuffer::init() {
     }
 
     // Get window size
-    width_  = window->width();
+    width_ = window->width();
     height_ = window->height();
     GLenum status;
 
@@ -83,11 +82,14 @@ void FrameBuffer::init() {
         glGenTextures(1, &texture[i]);
         glBindTexture(GL_TEXTURE_TYPE, texture[i]);
         if (num_samples > 1) {
-            glTexStorage2DMultisample(GL_TEXTURE_TYPE, num_samples, GL_RGBA8, width_, height_, GL_FALSE);
+            glTexStorage2DMultisample(GL_TEXTURE_TYPE, num_samples, GL_RGBA8,
+                                      width_, height_, GL_FALSE);
         } else {
-            glTexStorage2D(GL_TEXTURE_TYPE, num_samples, GL_RGBA8, width_, height_);
+            glTexStorage2D(GL_TEXTURE_TYPE, num_samples, GL_RGBA8, width_,
+                           height_);
         }
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_TYPE, texture[i], 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_TYPE, texture[i], 0);
 
         // Check FrameBuffer
         status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -143,7 +145,8 @@ void FrameBuffer::draw() {
     // Render offscreen buffer to screen
     glBindFramebuffer(GL_READ_FRAMEBUFFER, buffer[0]);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    glBlitFramebuffer(0, 0, width_, height_, 0, 0, window->width(), window->height(), GL_COLOR_BUFFER_BIT, GL_LINEAR);
+    glBlitFramebuffer(0, 0, width_, height_, 0, 0, window->width(),
+                      window->height(), GL_COLOR_BUFFER_BIT, GL_LINEAR);
 }
 
 void FrameBuffer::apply_bloom() {

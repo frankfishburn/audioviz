@@ -1,7 +1,6 @@
 #include <cstdlib>
 #include <exception>
 #include <functional>
-
 #include <iostream>
 #include <memory>
 #include <vector>
@@ -11,9 +10,8 @@
 #include "framebuffer.h"
 #include "shader_program.h"
 #include "stft.h"
-#include "window.h"
-
 #include "vfx/liquid/effect.h"
+#include "window.h"
 
 using namespace std;
 
@@ -45,11 +43,11 @@ int main(int argc, char** argv) {
 
     // Configure spectrogram transform
     SpectrogramConfig config;
-    config.padding_mode     = PAD;
-    config.window_length    = 4096;
-    config.window_overlap   = config.window_length * .5;
+    config.padding_mode = PAD;
+    config.window_length = 4096;
+    config.window_overlap = config.window_length * .5;
     config.transform_length = config.window_length * 4;
-    config.window_type      = HAMMING;
+    config.window_type = HAMMING;
 
     // Create STFT object
     STFT stft(audio_source, config, 4096 * 2);
@@ -80,11 +78,11 @@ int main(int argc, char** argv) {
 
     // Start audio
     audio_player.play();
-    double        start_time   = 0;
-    double        current_time = 0;
-    std::string   current_time_str;
-    unsigned long frame_count   = 0;
-    bool          force_refresh = true;
+    double start_time = 0;
+    double current_time = 0;
+    std::string current_time_str;
+    unsigned long frame_count = 0;
+    bool force_refresh = true;
 
     // Render Loop
     bool quit = false;
@@ -113,14 +111,14 @@ int main(int argc, char** argv) {
                             break;
                         case SDLK_LEFT:
                             audio_player.back();
-                            start_time    = audio_player.current_time();
-                            frame_count   = 0;
+                            start_time = audio_player.current_time();
+                            frame_count = 0;
                             force_refresh = true;
                             break;
                         case SDLK_RIGHT:
                             audio_player.forward();
-                            start_time    = audio_player.current_time();
-                            frame_count   = 0;
+                            start_time = audio_player.current_time();
+                            frame_count = 0;
                             force_refresh = true;
                             break;
                         case SDLK_ESCAPE:
@@ -162,13 +160,14 @@ int main(int argc, char** argv) {
         // Display framerate info
         if (audio_player.playing()) {
             frame_count++;
-            current_time     = audio_player.current_time();
+            current_time = audio_player.current_time();
             current_time_str = audio_player.current_time_str();
             if ((current_time - start_time) >= 2 || force_refresh) {
-                printf("\r%s (fps: %4.4f)", current_time_str.c_str(), frame_count / (current_time - start_time));
+                printf("\r%s (fps: %4.4f)", current_time_str.c_str(),
+                       frame_count / (current_time - start_time));
                 fflush(stdout);
-                frame_count   = 0;
-                start_time    = current_time;
+                frame_count = 0;
+                start_time = current_time;
                 force_refresh = false;
             }
         }

@@ -7,7 +7,7 @@
 
 class AudioSource {
    public:
-    AudioSource() {};
+    AudioSource(){};
     AudioSource(std::string filename);
 
     // Query state
@@ -20,14 +20,14 @@ class AudioSource {
     std::string info() const;
 
     // Get pointer to audio data
-    const std::vector<float>& data() const { return data_; };
+    const std::vector<float> &data() const { return data_; };
 
     // Query metadata
     std::string artist() const { return artist_; };
     std::string album() const { return album_; };
     std::string title() const { return title_; };
     std::string year() const { return year_; };
-    std::string description () const;
+    std::string description() const;
 
    private:
     // State
@@ -37,7 +37,7 @@ class AudioSource {
     unsigned long num_channels_;
     unsigned long num_samples_;
     unsigned long sample_rate_;
-    
+
     // Interleaved audio data
     std::vector<float> data_;
 
@@ -47,15 +47,15 @@ class AudioSource {
     std::string album_;
     std::string title_;
     std::string year_;
-
 };
 
-
 class AudioSourceError : virtual public std::exception {
-public:
-    AudioSourceError(int error_code, std::string error_source, std::string info);
-    const char * what () const throw () {return message.c_str();}
-protected:
+   public:
+    AudioSourceError(int error_code, std::string error_source,
+                     std::string info);
+    const char *what() const throw() { return message.c_str(); }
+
+   protected:
     std::string message;
 };
 

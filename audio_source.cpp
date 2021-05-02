@@ -1,6 +1,6 @@
 #include "audio_source.h"
 
-#include <algorithm>   // min, max
+#include <algorithm>  // min, max
 #include <string>
 
 extern "C" {
@@ -10,13 +10,12 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 
-
 AudioSource::AudioSource(std::string filename) {
-    int              status;
-    AVFormatContext* format;
-    AVCodecContext*  context;
-    AVStream*        stream;
-    AVCodec*         codec;
+    int status;
+    AVFormatContext *format;
+    AVCodecContext *context;
+    AVStream *stream;
+    AVCodec *codec;
 
     // Open file
     format = avformat_alloc_context();
@@ -39,43 +38,41 @@ AudioSource::AudioSource(std::string filename) {
     if (status == AVERROR_STREAM_NOT_FOUND) {
         avformat_close_input(&format);
         avformat_free_context(format);
-        throw AudioSourceError(status, "av_find_best_stream", "Stream not found");
+        throw AudioSourceError(status, "av_find_best_stream",
+                               "Stream not found");
     }
     if (status == AVERROR_DECODER_NOT_FOUND) {
         avformat_close_input(&format);
         avformat_free_context(format);
-        throw AudioSourceError(status, "av_find_best_stream", "Decoder not found");
+        throw AudioSourceError(status, "av_find_best_stream",
+                               "Decoder not found");
     }
 
     // Set selected stream
-    int streamidx        = status;
-    stream               = format->streams[streamidx];
+    int streamidx = status;
+    stream = format->streams[streamidx];
     stream->need_parsing = AVSTREAM_PARSE_TIMESTAMPS;
 
     // Set stream properties
-    num_channels_         = stream->codecpar->channels;
-    sample_rate_          = stream->codecpar->sample_rate;
+    num_channels_ = stream->codecpar->channels;
+    sample_rate_ = stream->codecpar->sample_rate;
     filename_ = filename;
     loaded_ = true;
 
     // Update audio metadata
-    AVDictionaryEntry* tag = NULL;
+    AVDictionaryEntry *tag = NULL;
 
     tag = av_dict_get(format->metadata, "artist", NULL, 0);
-    if (tag != NULL)
-        artist_ = std::string(tag->value);
+    if (tag != NULL) artist_ = std::string(tag->value);
 
     tag = av_dict_get(format->metadata, "album", NULL, 0);
-    if (tag != NULL)
-        album_ = std::string(tag->value);
+    if (tag != NULL) album_ = std::string(tag->value);
 
     tag = av_dict_get(format->metadata, "title", NULL, 0);
-    if (tag != NULL)
-        title_ = std::string(tag->value);
+    if (tag != NULL) title_ = std::string(tag->value);
 
     tag = av_dict_get(format->metadata, "originalyear", NULL, 0);
-    if (tag != NULL)
-        year_ = std::string(tag->value);
+    if (tag != NULL) year_ = std::string(tag->value);
 
     // Setup decoder
     context = avcodec_alloc_context3(codec);
@@ -89,10 +86,11 @@ AudioSource::AudioSource(std::string filename) {
     }
 
     // prepare resampler
-    struct SwrContext* swr = swr_alloc();
+    struct SwrContext *swr = swr_alloc();
     av_opt_set_int(swr, "in_channel_count", stream->codecpar->channels, 0);
     av_opt_set_int(swr, "out_channel_count", 2, 0);
-    av_opt_set_int(swr, "in_channel_layout", stream->codecpar->channel_layout, 0);
+    av_opt_set_int(swr, "in_channel_layout", stream->codecpar->channel_layout,
+                   0);
     av_opt_set_int(swr, "out_channel_layout", AV_CH_LAYOUT_STEREO, 0);
     av_opt_set_int(swr, "in_sample_rate", stream->codecpar->sample_rate, 0);
     av_opt_set_int(swr, "out_sample_rate", stream->codecpar->sample_rate, 0);
@@ -105,15 +103,16 @@ AudioSource::AudioSource(std::string filename) {
         avcodec_free_context(&context);
         avformat_close_input(&format);
         avformat_free_context(format);
-        throw AudioSourceError(-1, "swr_init", "Resampler couldn't be initialized");
+        throw AudioSourceError(-1, "swr_init",
+                               "Resampler couldn't be initialized");
     }
 
     // prepare to read data
-    AVPacket* packet = av_packet_alloc();
+    AVPacket *packet = av_packet_alloc();
     av_init_packet(packet);
 
-    AVFrame* frame    = av_frame_alloc();
-    AVFrame* outframe = av_frame_alloc();
+    AVFrame *frame = av_frame_alloc();
+    AVFrame *outframe = av_frame_alloc();
 
     if (!frame || !outframe) {
         throw AudioSourceError(-1, "av_frame_alloc", "Couldn't allocate frame");
@@ -129,22 +128,25 @@ AudioSource::AudioSource(std::string filename) {
 
         status = avcodec_send_packet(context, packet);
         if (status < 0) {
-            throw AudioSourceError(status, "avcodec_send_packet", "Packet error");
+            throw AudioSourceError(status, "avcodec_send_packet",
+                                   "Packet error");
         }
 
         status = avcodec_receive_frame(context, frame);
         if (status < 0) {
-            throw AudioSourceError(status, "avcodec_receive_frame", "Frame error");
+            throw AudioSourceError(status, "avcodec_receive_frame",
+                                   "Frame error");
         }
 
         av_frame_copy_props(outframe, frame);
         outframe->channel_layout = AV_CH_LAYOUT_STEREO;
-        outframe->format         = AV_SAMPLE_FMT_FLT;
-        outframe->sample_rate    = frame->sample_rate;
+        outframe->format = AV_SAMPLE_FMT_FLT;
+        outframe->sample_rate = frame->sample_rate;
 
         status = swr_convert_frame(swr, outframe, frame);
         if (status != 0) {
-            throw AudioSourceError(status, "swr_convert_frame", "Resample error");
+            throw AudioSourceError(status, "swr_convert_frame",
+                                   "Resample error");
         }
 
         oldsize = newsize;
@@ -152,7 +154,8 @@ AudioSource::AudioSource(std::string filename) {
 
         // Expand array and copy frame contents
         data_.resize(newsize);
-        memcpy(data_.data() + oldsize, outframe->data[0], outframe->nb_samples * outframe->channels * sizeof(float));
+        memcpy(data_.data() + oldsize, outframe->data[0],
+               outframe->nb_samples * outframe->channels * sizeof(float));
 
         // Close packet/frame
         av_frame_unref(outframe);
@@ -175,7 +178,6 @@ AudioSource::AudioSource(std::string filename) {
 
     avformat_close_input(&format);
     avformat_free_context(format);
-
 }
 
 std::string AudioSource::info() const {
@@ -208,12 +210,11 @@ std::string AudioSource::description() const {
     return os.str();
 }
 
-
-AudioSourceError::AudioSourceError(int error_code, std::string error_source, std::string info) {
+AudioSourceError::AudioSourceError(int error_code, std::string error_source,
+                                   std::string info) {
     std::ostringstream os;
     os << "Failed to open audio source due to error ";
     os << std::to_string(error_code) << " returned by " << error_source;
-    if (!info.empty())
-        os << " (" << info << ")";
+    if (!info.empty()) os << " (" << info << ")";
     message = os.str();
 }
