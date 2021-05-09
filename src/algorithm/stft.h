@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "audio/i_source.h"
-#include "interpolant.h"
+#include "interpolator.h"
 
 struct Spectrum {
     int length;
@@ -47,7 +47,7 @@ class STFT {
     SpectrogramInput props;
     SpectrogramConfig config;
     SpectrogramTransform *program;
-    interpolant *interpolator;
+    UnivariateInterpolator interpolator;
 
     // Temporaries
     std::vector<float> temp_freq;

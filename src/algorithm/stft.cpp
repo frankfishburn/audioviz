@@ -45,10 +45,7 @@ STFT::STFT(const STFT &orig) {
     initialize();
 }
 
-STFT::~STFT() {
-    delete interpolator;
-    spectrogram_destroy(program);
-}
+STFT::~STFT() { spectrogram_destroy(program); }
 
 void STFT::initialize() {
     // Create spectrogram object
@@ -84,8 +81,7 @@ void STFT::initialize() {
     }
 
     // Setup interpolator
-    interpolator = new interpolant((int)temp_freq_len, temp_freq.data(),
-                                   result[0].length, result[0].freq.data());
+    interpolator = UnivariateInterpolator(temp_freq, result[0].freq);
 }
 
 void STFT::analyze() {
@@ -175,7 +171,7 @@ void STFT::compute(const int channel, const long sample_index) {
         temp_power[fidx] = sqrt(temp_power[fidx]) * scale / maxmaxpower;
     }
 
-    interpolator->estimate(temp_power.data(), result[channel].power.data());
+    interpolator.estimate(temp_power, result[channel].power);
 
     // Get the sum of power and change
     float maxpower = -INFINITY;
