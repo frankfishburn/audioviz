@@ -31,11 +31,11 @@ class STFT {
     void compute(const int channel, const long sample_index);
 
     // Accessors
-    Spectrum getSpectrum(int ch) { return result[ch]; };
-    unsigned int numChannels() { return num_channels; };
-    unsigned long numSamples() { return props.num_samples; };
-    unsigned long numFreq() { return result[0].length; };
-    int maxGoodFreq();
+    Spectrum getSpectrum(int ch) const { return result[ch]; };
+    unsigned int numChannels() const { return num_channels; };
+    unsigned long numSamples() const { return props.num_samples; };
+    unsigned long numFreq() const { return result[0].length; };
+    int maxGoodFreq() const { return result[0].length; };
 
    private:
     // Audio data
