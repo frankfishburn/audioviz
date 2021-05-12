@@ -9,74 +9,99 @@ const char* src_shader_fragment =
 #include "vfx/liquid/fragment.glsl"
     ;
 
-FXLiquid::FXLiquid(STFT* stft_ptr, FrameBuffer* fb_ptr) {
-    // Set shader name and program structures
-    effect_name = "Liquid";
-    stft = stft_ptr;
-    fb = fb_ptr;
+static constexpr unsigned long segment_length = 8192;
+static constexpr unsigned long window_length = 0.5 * segment_length;
+static constexpr unsigned long window_overlap = 0.5 * window_length;
+static constexpr unsigned long transform_length = 4 * window_length;
 
+STFT create_stft(const IAudioSource& audio_source) {
+    SpectrogramInput props;
+    props.data_size = sizeof(float);
+    props.sample_rate = audio_source.sample_rate();
+    props.num_samples = segment_length;
+    props.stride = 1;  // Not equal to # of channels since we deinterleave first
+
+    SpectrogramConfig config;
+    config.padding_mode = PAD;
+    config.window_length = window_length;
+    config.window_overlap = window_overlap;
+    config.transform_length = transform_length;
+    config.window_type = HAMMING;
+
+    return STFT(props, config);
+}
+
+FXLiquid::FXLiquid(const IAudioSource& audio_source, const FrameBuffer& fb)
+    : audio_source_(audio_source), stft_(create_stft(audio_source)), fb_(fb) {
     // Compile and link shader
-    shader = new ShaderProgram(src_shader_vertex, src_shader_fragment);
+    shader_ = new ShaderProgram(src_shader_vertex, src_shader_fragment);
 
     // Set data parameters and allocate
-    num_frequencies = stft->maxGoodFreq();
-    num_vertices = 4 * num_frequencies;
-    vertices.resize(num_vertices);
+    num_vertices_ = 4 * stft_.length();
+    vertices_.resize(num_vertices_);
 
     // Set static uniforms
-    shader->set_uniform("num_freq", (int)num_frequencies);
-    shader->set_uniform("resolution", (float)fb->width(), (float)fb->height());
+    shader_->set_uniform("num_freq", (int)stft_.length());
+    shader_->set_uniform("resolution", (float)fb_.width(), (float)fb_.height());
 
     // Set up vertex buffer/array object for each channel
-    glGenVertexArrays(1, &VAO);
+    glGenVertexArrays(1, &VAO_);
 
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, num_vertices * sizeof(GLfloat), NULL,
+    glGenBuffers(1, &VBO_);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_);
+    glBufferData(GL_ARRAY_BUFFER, num_vertices_ * sizeof(GLfloat), NULL,
                  GL_DYNAMIC_DRAW);
 
-    glBindVertexArray(VAO);
-    shader->set_attrib("amplitude", 1);
+    glBindVertexArray(VAO_);
+    shader_->set_attrib("amplitude", 1);
 }
 
-void FXLiquid::draw() {
-    float* power_left;
-    float* power_right;
+void FXLiquid::draw(const unsigned long position) {
+    // Get signal at current position
+    std::vector<float> signal_left =
+        audio_source_.get_segment(0, position, segment_length);
+    std::vector<float> signal_right =
+        audio_source_.get_segment(1, position, segment_length);
 
-    power_left = stft->getSpectrum(0).power.data();
+    // Must check size since get_window can return a shorter vector than
+    // requested
+    if (signal_left.size() == segment_length &&
+        signal_right.size() == segment_length) {
+        // Compute spectrum
+        std::vector<float> power_left = stft_.compute(signal_left);
+        std::vector<float> power_right = stft_.compute(signal_right);
 
-    if (stft->numChannels() == 1)
-        power_right = power_left;
-    else
-        power_right = stft->getSpectrum(1).power.data();
+        // Arrange spectra in vertex array
+        for (unsigned long idx = 0; idx < stft_.length(); idx++) {
+            vertices_[2 * idx + 1] = -power_left[idx];
+            vertices_[num_vertices_ - 2 * idx] = power_right[idx];
+        }
 
-    // Copy left channel power spectrum into vertex buffer
-    for (int freq = 0; freq < num_frequencies; freq++)
-        vertices[2 * freq + 1] = -power_left[freq];
-
-    // Copy right channel power spectrum into vertex buffer
-    for (int freq = 0; freq < num_frequencies; freq++)
-        vertices[num_vertices - 2 * freq] = power_right[freq];
+    } else {
+        // Clear out vertex array
+        for (unsigned long idx = 0; idx < vertices_.size(); idx++)
+            vertices_[idx] = 0;
+    }
 
     // Update the buffer
-    fb->bind();
-    shader->use();
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, num_vertices * sizeof(GLfloat),
-                    vertices.data());
-    glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, num_vertices);
-    fb->unbind();
+    fb_.bind();
+    shader_->use();
+    glBindBuffer(GL_ARRAY_BUFFER, VBO_);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, num_vertices_ * sizeof(GLfloat),
+                    vertices_.data());
+    glBindVertexArray(VAO_);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, num_vertices_);
+    fb_.unbind();
 }
 
-std::string FXLiquid::name() { return effect_name; }
+std::string FXLiquid::name() { return std::string("Liquid"); }
 
 void FXLiquid::set_resolution(const float width, const float height) {
-    shader->set_uniform("resolution", width, height);
+    shader_->set_uniform("resolution", width, height);
 }
 
 void FXLiquid::set_resolution(const int width, const int height) {
-    shader->set_uniform("resolution", (float)width, (float)height);
+    shader_->set_uniform("resolution", (float)width, (float)height);
 }
 
-FXLiquid::~FXLiquid() { delete shader; }
+FXLiquid::~FXLiquid() { delete shader_; }

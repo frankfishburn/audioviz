@@ -114,7 +114,7 @@ void FrameBuffer::freshen() {
     init();
 }
 
-void FrameBuffer::bind() {
+void FrameBuffer::bind() const {
     // Bind FrameBuffer render target
     glBindFramebuffer(GL_FRAMEBUFFER, buffer[0]);
     glViewport(0, 0, width_, height_);
@@ -126,7 +126,7 @@ void FrameBuffer::bind() {
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-void FrameBuffer::unbind() {
+void FrameBuffer::unbind() const {
     // Unbind FrameBuffer render target
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, window.width(), window.height());

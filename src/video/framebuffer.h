@@ -8,12 +8,12 @@ class FrameBuffer {
    public:
     FrameBuffer(const Window &window, bool do_msaa);
     virtual ~FrameBuffer();
-    void bind();
-    void unbind();
+    void bind() const;
+    void unbind() const;
     void draw();
     void freshen();
-    int width() { return width_; }
-    int height() { return height_; }
+    int width() const { return width_; }
+    int height() const { return height_; }
     void set_bloom(bool in) { do_bloom = in; }
     void toggle_bloom() { do_bloom = !do_bloom; }
     void toggle_msaa() {

@@ -41,20 +41,6 @@ int main(int argc, char** argv) {
 
     std::cout << "Playing " << audio_source.description() << std::endl;
 
-    // Configure spectrogram transform
-    SpectrogramConfig config;
-    config.padding_mode = PAD;
-    config.window_length = 4096;
-    config.window_overlap = config.window_length * .5;
-    config.transform_length = config.window_length * 4;
-    config.window_type = HAMMING;
-
-    // Create STFT object
-    STFT stft(audio_source, config, 4096 * 2);
-
-    // Analyze for maximum power
-    stft.analyze();
-
     // Initialize window and context
     Window window;
 
@@ -62,7 +48,7 @@ int main(int argc, char** argv) {
     FrameBuffer fb(window, true);
 
     // Setup visual effect renderer
-    FXLiquid vfx(&stft, &fb);
+    FXLiquid vfx(audio_source, fb);
 
     // Enable v-sync
     SDL_GL_SetSwapInterval(1);
@@ -144,12 +130,9 @@ int main(int argc, char** argv) {
             }
         }
 
-        // Compute current STFT
+        // Render visual effects for current position into framebuffer
         long current_sample = audio_player.current_sample();
-        stft.compute(current_sample);
-
-        // Render visual effects to framebuffer
-        vfx.draw();
+        vfx.draw(current_sample);
 
         // Draw framebuffer to screen
         fb.draw();
