@@ -8,6 +8,7 @@ add_executable(
   video/framebuffer.cpp 
   video/shader_program.cpp 
   video/window.cpp 
+  vfx/eclipse/effect.cpp
   vfx/liquid/effect.cpp
 )
 target_include_directories(audioviz PUBLIC ${PROJECT_SOURCE_DIR}/src)

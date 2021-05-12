@@ -3,10 +3,10 @@
 #include <vector>
 
 static const char* src_shader_vertex =
-#include "vfx/liquid/vertex.glsl"
+#include "vfx/eclipse/vertex.glsl"
     ;
 static const char* src_shader_fragment =
-#include "vfx/liquid/fragment.glsl"
+#include "vfx/eclipse/fragment.glsl"
     ;
 
 static constexpr unsigned long segment_length = 16384;
@@ -31,13 +31,13 @@ static STFT create_stft(const IAudioSource& audio_source) {
     return STFT(props, config);
 }
 
-FXLiquid::FXLiquid(const IAudioSource& audio_source, const FrameBuffer& fb)
+FXEclipse::FXEclipse(const IAudioSource& audio_source, const FrameBuffer& fb)
     : audio_source_(audio_source), stft_(create_stft(audio_source)), fb_(fb) {
     // Compile and link shader
     shader_ = new ShaderProgram(src_shader_vertex, src_shader_fragment);
 
     // Set data parameters and allocate
-    num_vertices_ = 4 * stft_.length();
+    num_vertices_ = 2 * stft_.length();
     vertices_.resize(num_vertices_);
 
     // Set static uniforms
@@ -56,7 +56,7 @@ FXLiquid::FXLiquid(const IAudioSource& audio_source, const FrameBuffer& fb)
     shader_->set_attrib("amplitude", 1);
 }
 
-void FXLiquid::draw(const unsigned long position) {
+void FXEclipse::draw(const unsigned long position) {
     // Get signal at current position
     const unsigned long center = position - segment_length / 2;
     std::vector<float> signal_left =
@@ -73,10 +73,10 @@ void FXLiquid::draw(const unsigned long position) {
         std::vector<float> power_right = stft_.compute(signal_right);
 
         // Arrange spectra in vertex array
-        for (unsigned long idx = 0; idx < stft_.length(); idx++) {
-            vertices_[2 * idx + 1] = -power_left[idx];
-            vertices_[num_vertices_ - 2 * idx] = power_right[idx];
-        }
+        for (unsigned long idx = 0; idx < stft_.length(); idx++)
+            vertices_[idx] = power_left[idx];
+        for (unsigned long idx = 0; idx < stft_.length(); idx++)
+            vertices_[num_vertices_ - idx] = power_right[idx];
 
     } else {
         // Clear out vertex array
@@ -91,18 +91,18 @@ void FXLiquid::draw(const unsigned long position) {
     glBufferSubData(GL_ARRAY_BUFFER, 0, num_vertices_ * sizeof(GLfloat),
                     vertices_.data());
     glBindVertexArray(VAO_);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, num_vertices_);
+    glDrawArrays(GL_LINE_LOOP, 0, num_vertices_);
     fb_.unbind();
 }
 
-std::string FXLiquid::name() { return std::string("Liquid"); }
+std::string FXEclipse::name() { return std::string("Eclipse"); }
 
-void FXLiquid::set_resolution(const float width, const float height) {
+void FXEclipse::set_resolution(const float width, const float height) {
     shader_->set_uniform("resolution", width, height);
 }
 
-void FXLiquid::set_resolution(const int width, const int height) {
+void FXEclipse::set_resolution(const int width, const int height) {
     shader_->set_uniform("resolution", (float)width, (float)height);
 }
 
-FXLiquid::~FXLiquid() { delete shader_; }
+FXEclipse::~FXEclipse() { delete shader_; }

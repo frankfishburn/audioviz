@@ -8,7 +8,7 @@
 #include "algorithm/stft.h"
 #include "audio/file_source.h"
 #include "audio/player.h"
-#include "vfx/liquid/effect.h"
+#include "vfx/eclipse/effect.h"
 #include "video/framebuffer.h"
 #include "video/shader_program.h"
 #include "video/window.h"
@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
     FrameBuffer fb(window, true);
 
     // Setup visual effect renderer
-    FXLiquid vfx(audio_source, fb);
+    FXEclipse vfx(audio_source, fb);
 
     // Enable v-sync
     SDL_GL_SetSwapInterval(1);
