@@ -9,9 +9,9 @@ const char* src_shader_fragment =
 #include "vfx/liquid/fragment.glsl"
     ;
 
-static constexpr unsigned long segment_length = 8192;
-static constexpr unsigned long window_length = 0.5 * segment_length;
-static constexpr unsigned long window_overlap = 0.5 * window_length;
+static constexpr unsigned long segment_length = 16384;
+static constexpr unsigned long window_length = segment_length;
+static constexpr unsigned long window_overlap = 0;
 static constexpr unsigned long transform_length = 4 * window_length;
 
 STFT create_stft(const IAudioSource& audio_source) {
@@ -58,10 +58,11 @@ FXLiquid::FXLiquid(const IAudioSource& audio_source, const FrameBuffer& fb)
 
 void FXLiquid::draw(const unsigned long position) {
     // Get signal at current position
+    const unsigned long center = position - segment_length / 2;
     std::vector<float> signal_left =
-        audio_source_.get_segment(0, position, segment_length);
+        audio_source_.get_segment(0, center, segment_length);
     std::vector<float> signal_right =
-        audio_source_.get_segment(1, position, segment_length);
+        audio_source_.get_segment(1, center, segment_length);
 
     // Must check size since get_window can return a shorter vector than
     // requested
