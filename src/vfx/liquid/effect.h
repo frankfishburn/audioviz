@@ -12,7 +12,6 @@
 class FXLiquid {
    public:
     FXLiquid(const IAudioSource&, const FrameBuffer&);
-    ~FXLiquid();
     void draw(const unsigned long);
 
     std::string name();
@@ -26,7 +25,7 @@ class FXLiquid {
 
     int num_vertices_;
     std::vector<float> vertices_;
-    ShaderProgram* shader_;
+    ShaderProgram program_;
     GLuint VBO_;
     GLuint VAO_;
 };

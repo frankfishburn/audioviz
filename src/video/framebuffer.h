@@ -36,9 +36,9 @@ class FrameBuffer {
     GLuint buffer[3];
     GLuint texture[3];
 
-    ShaderProgram *copy_shader;
-    ShaderProgram *hblur_shader;
-    ShaderProgram *vblur_shader;
+    ShaderProgram copy_shader;
+    ShaderProgram hblur_shader;
+    ShaderProgram vblur_shader;
     void init();
     void deinit();
     void apply_bloom();

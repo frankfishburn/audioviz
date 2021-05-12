@@ -28,12 +28,7 @@ FrameBuffer::FrameBuffer(const Window &window, bool do_msaa)
     init();
 }
 
-FrameBuffer::~FrameBuffer() {
-    deinit();
-    delete copy_shader;
-    delete hblur_shader;
-    delete vblur_shader;
-}
+FrameBuffer::~FrameBuffer() { deinit(); }
 
 void FrameBuffer::init() {
     if (do_msaa) {  // MSAA
@@ -42,26 +37,26 @@ void FrameBuffer::init() {
         GL_TEXTURE_TYPE = GL_TEXTURE_2D_MULTISAMPLE;
 
         // Setup copy shader
-        copy_shader = new ShaderProgram(src_copy_vert, src_copy_frag_MSAA);
-        copy_shader->set_uniform("num_samples", num_samples);
+        copy_shader.compile(src_copy_vert, src_copy_frag_MSAA);
+        copy_shader.set_uniform("num_samples", num_samples);
 
         // Setup horizontal and vertical blur shaders
-        hblur_shader = new ShaderProgram(src_copy_vert, src_blurh_frag_MSAA);
-        hblur_shader->set_uniform("num_samples", num_samples);
+        hblur_shader.compile(src_copy_vert, src_blurh_frag_MSAA);
+        hblur_shader.set_uniform("num_samples", num_samples);
 
-        vblur_shader = new ShaderProgram(src_copy_vert, src_blurv_frag_MSAA);
-        vblur_shader->set_uniform("num_samples", num_samples);
+        vblur_shader.compile(src_copy_vert, src_blurv_frag_MSAA);
+        vblur_shader.set_uniform("num_samples", num_samples);
     } else {  // No MSAA
 
         num_samples = 1;
         GL_TEXTURE_TYPE = GL_TEXTURE_2D;
 
         // Setup copy shader
-        copy_shader = new ShaderProgram(src_copy_vert, src_copy_frag_noMSAA);
+        copy_shader.compile(src_copy_vert, src_copy_frag_noMSAA);
 
         // Setup horizontal and vertical blur shaders
-        hblur_shader = new ShaderProgram(src_copy_vert, src_blurh_frag_noMSAA);
-        vblur_shader = new ShaderProgram(src_copy_vert, src_blurv_frag_noMSAA);
+        hblur_shader.compile(src_copy_vert, src_blurh_frag_noMSAA);
+        vblur_shader.compile(src_copy_vert, src_blurv_frag_noMSAA);
     }
 
     // Get window size
@@ -153,7 +148,7 @@ void FrameBuffer::apply_bloom() {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    hblur_shader->use();
+    hblur_shader.use();
     glBindTexture(GL_TEXTURE_TYPE, texture[0]);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
@@ -166,7 +161,7 @@ void FrameBuffer::apply_bloom() {
     glBlendFunc(GL_CONSTANT_ALPHA, GL_CONSTANT_ALPHA);
     glBlendEquation(GL_FUNC_ADD);
 
-    vblur_shader->use();
+    vblur_shader.use();
     glBindTexture(GL_TEXTURE_TYPE, texture[1]);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 

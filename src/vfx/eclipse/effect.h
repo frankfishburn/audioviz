@@ -12,13 +12,11 @@
 class FXEclipse {
    public:
     FXEclipse(const IAudioSource&, const FrameBuffer&);
-    ~FXEclipse();
     void draw(const unsigned long);
 
     std::string name();
     void set_resolution(const float width, const float height);
     void set_resolution(const int width, const int height);
-    void print_errors() const { shader_->print_errors(); };
 
    private:
     const IAudioSource& audio_source_;
@@ -27,7 +25,7 @@ class FXEclipse {
 
     int num_vertices_;
     std::vector<float> vertices_;
-    ShaderProgram* shader_;
+    ShaderProgram program_;
     GLuint VBO_;
     GLuint VAO_;
 };

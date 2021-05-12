@@ -4,19 +4,23 @@
 #include <GL/glew.h>
 
 #include <cstddef>
+#include <fstream>
 #include <string>
+
+#include "shader.h"
 
 class ShaderProgram {
    public:
-    ShaderProgram(){};
-    ShaderProgram(const char *vertex_source, const char *fragment_source);
-    ShaderProgram(const ShaderProgram &orig);
-    virtual ~ShaderProgram();
+    ShaderProgram();
+    ~ShaderProgram();
 
-    bool isok();
-    void use();
-    void print_errors();
-    GLuint get_program() { return program; }
+    void compile(const std::string &vertex_source,
+                 const std::string &fragment_source);
+    void compile(const std::ifstream &vertex_file,
+                 const std::ifstream &fragment_file);
+
+    bool ready() const;
+    void use() const;
 
     void set_uniform(const char *, int);
     void set_uniform(const char *, float);
@@ -28,13 +32,10 @@ class ShaderProgram {
     void set_attrib(const char *);
 
    private:
-    void compile_shader(GLuint &shader, const char *shaderSource);
-    void link_shaders();
-
-    GLuint program = 0;
-    GLuint vertex_shader = 0;
-    GLuint fragment_shader = 0;
-    std::string GLSL_version = "#version 410 core\n";
+    GLuint program;
+    Shader vertex_shader = Shader(vertex);
+    Shader fragment_shader = Shader(fragment);
+    std::string get_messages();
 };
 
 #endif /* SHADER_PROGRAM_H */

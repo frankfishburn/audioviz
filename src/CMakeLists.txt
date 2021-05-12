@@ -5,7 +5,8 @@ add_executable(
   algorithm/stft.cpp
   audio/file_source.cpp  
   audio/player.cpp 
-  video/framebuffer.cpp 
+  video/framebuffer.cpp
+  video/shader.cpp
   video/shader_program.cpp 
   video/window.cpp 
   vfx/eclipse/effect.cpp
