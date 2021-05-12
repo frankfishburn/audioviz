@@ -1,7 +1,7 @@
-#include "interpolator.h"
+#include "resampler.h"
 
-UnivariateInterpolator::UnivariateInterpolator(
-    const std::vector<float> &known_pts, const std::vector<float> &query_pts) {
+Resampler::Resampler(const std::vector<float> &known_pts,
+                     const std::vector<float> &query_pts) {
     const unsigned long num_known = known_pts.size();
     const unsigned long num_query = query_pts.size();
 
@@ -30,11 +30,12 @@ UnivariateInterpolator::UnivariateInterpolator(
     }
 }
 
-void UnivariateInterpolator::estimate(const std::vector<float> &known_values,
-                                      std::vector<float> &query_values) const {
+std::vector<float> Resampler::resample(const std::vector<float> &values) const {
+    std::vector<float> result(data_.size());
     for (unsigned long idx = 0; idx < data_.size(); idx++) {
         const interp &q = data_[idx];
-        query_values[idx] = known_values[q.idxlow] * (1 - q.scale) +
-                            known_values[q.idxhigh] * q.scale;
+        result[idx] =
+            values[q.idxlow] * (1 - q.scale) + values[q.idxhigh] * q.scale;
     }
+    return result;
 }

@@ -1,7 +1,7 @@
 add_executable(
   audioviz 
   main.cpp 
-  algorithm/interpolator.cpp 
+  algorithm/resampler.cpp 
   algorithm/stft.cpp
   audio/file_source.cpp  
   audio/player.cpp 
