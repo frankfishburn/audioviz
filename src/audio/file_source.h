@@ -31,6 +31,8 @@ class FileAudioSource : public IAudioSource {
 
     // Get pointer to audio data
     const std::vector<float> &data() const { return data_; };
+    std::vector<float> get_segment(const int channel, const long center,
+                                   const long width) const;
 
     // Query metadata
     std::string description() const;

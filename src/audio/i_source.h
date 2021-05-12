@@ -19,6 +19,8 @@ class IAudioSource {
 
     // Get pointer to audio data
     virtual const std::vector<float> &data() const = 0;
+    virtual std::vector<float> get_segment(const int channel, const long center,
+                                           const long width) const = 0;
 
     // Query metadata
     virtual std::string description() const = 0;

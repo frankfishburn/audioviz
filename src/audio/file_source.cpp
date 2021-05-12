@@ -136,6 +136,32 @@ void FileAudioSource::open(std::string filename) {
     }
 }
 
+std::vector<float> FileAudioSource::get_segment(const int channel,
+                                                const long center,
+                                                const long width) const {
+    unsigned int real_channel = channel;
+    if (real_channel > num_channels_) real_channel = 0;
+
+    // Check bounds of window
+    long start = center - width / 2;
+    start = std::max(start, (long)0);
+    start = std::min(start, (long)num_samples_ - width - 1);
+
+    long end = start + width;
+    end = std::min(end, (long)num_samples_);
+
+    long real_width = end - start;
+
+    // Create output
+    std::vector<float> window(real_width);
+    for (long idx = 0; idx < real_width; idx++) {
+        long sample = start + idx;
+        window[idx] = data_[num_channels_ * sample + real_channel];
+    }
+
+    return window;
+}
+
 std::string FileAudioSource::info() const {
     std::ostringstream os;
     os << "Filename:      " << filename_ << std::endl;
