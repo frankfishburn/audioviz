@@ -26,8 +26,8 @@ void main(void){
     freq = 2.0 * (freq - float(num_freq)/2.0) / float(num_freq);
 
     // Clamp values
-    float y_pos = 0.99 * freq;
-    float x_pos = 0.99 * min(amplitude,1.0);
+    float x_pos = 0.99 * freq;
+    float y_pos = 0.99 * min(amplitude,1.0);
 
     gl_Position = vec4( x_pos, y_pos, 0.0, 1.0);
 
