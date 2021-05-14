@@ -4,7 +4,7 @@
 #include <iostream>
 #include <vector>
 
-ShaderProgram::ShaderProgram() { program = glCreateProgram(); }
+ShaderProgram::ShaderProgram() : program(glCreateProgram()) {}
 
 ShaderProgram::~ShaderProgram() { glDeleteProgram(program); }
 

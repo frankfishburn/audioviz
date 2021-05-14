@@ -21,30 +21,30 @@ class FileAudioSource : public IAudioSource {
     void open(std::string filename);
 
     // Query state
-    bool loaded() const { return loaded_; };
+    bool loaded() const override { return loaded_; };
 
     // Query audio file properties
-    unsigned long num_channels() const { return num_channels_; };
-    unsigned long num_samples() const { return num_samples_; };
-    unsigned long sample_rate() const { return sample_rate_; };
-    std::string info() const;
+    unsigned long num_channels() const override { return num_channels_; };
+    unsigned long num_samples() const override { return num_samples_; };
+    unsigned long sample_rate() const override { return sample_rate_; };
+    std::string info() const override;
 
     // Get pointer to audio data
-    const std::vector<float> &data() const { return data_; };
+    const std::vector<float> &data() const override { return data_; };
     std::vector<float> get_segment(const int channel, const long center,
-                                   const long width) const;
+                                   const long width) const override;
 
     // Query metadata
-    std::string description() const;
+    std::string description() const override;
 
    private:
     // State
     bool loaded_ = false;
 
     // Stream properties
-    unsigned long num_channels_;
-    unsigned long num_samples_;
-    unsigned long sample_rate_;
+    unsigned long num_channels_ = 0;
+    unsigned long num_samples_ = 0;
+    unsigned long sample_rate_ = 0;
 
     // Interleaved audio data
     std::vector<float> data_;
@@ -64,7 +64,7 @@ class FileAudioSource : public IAudioSource {
 
 class AudioSourceError : virtual public std::exception {
    public:
-    AudioSourceError(int error_code, std::string error_source,
+    AudioSourceError(int error_code, const std::string &error_source,
                      std::string info);
     const char *what() const throw() { return message.c_str(); }
 

@@ -192,7 +192,8 @@ std::string FileAudioSource::description() const {
     return os.str();
 }
 
-AudioSourceError::AudioSourceError(int error_code, std::string error_source,
+AudioSourceError::AudioSourceError(int error_code,
+                                   const std::string &error_source,
                                    std::string info) {
     std::ostringstream os;
     os << "Failed to open audio source due to error ";

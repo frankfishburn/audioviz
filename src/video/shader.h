@@ -10,7 +10,7 @@ enum shader_types { vertex = GL_VERTEX_SHADER, fragment = GL_FRAGMENT_SHADER };
 
 class Shader {
    public:
-    Shader(shader_types shader_type);
+    explicit Shader(shader_types shader_type);
     ~Shader();
 
     void compile(const std::string& shader_source);

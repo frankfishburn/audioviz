@@ -21,8 +21,8 @@ class FrameBuffer {
         freshen();
     }
     void toggle_bg() { bg_black = !bg_black; };
-    bool bloom_enabled() { return do_bloom; }
-    bool msaa_enabled() { return do_msaa; }
+    bool bloom_enabled() const { return do_bloom; }
+    bool msaa_enabled() const { return do_msaa; }
 
    private:
     const Window &window;

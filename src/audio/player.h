@@ -8,7 +8,7 @@
 
 class AudioPlayer {
    public:
-    AudioPlayer(const IAudioSource &source);
+    explicit AudioPlayer(const IAudioSource &source);
     ~AudioPlayer();
 
     // Playback controls
@@ -21,9 +21,9 @@ class AudioPlayer {
     // Query player state
     bool playable() const { return playable_; };
     bool playing() const { return playing_; };
-    unsigned long current_sample();
-    double current_time();
-    std::string current_time_str();
+    unsigned long current_sample() const;
+    double current_time() const;
+    std::string current_time_str() const;
 
    private:
     // The audio source

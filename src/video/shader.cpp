@@ -5,9 +5,8 @@
 
 static constexpr char GLSL_version[] = "#version 410 core\n";
 
-Shader::Shader(shader_types shader_type) {
-    object_ = glCreateShader(shader_type);
-}
+Shader::Shader(shader_types shader_type)
+    : object_(glCreateShader(shader_type)) {}
 
 Shader::~Shader() { glDeleteShader(object_); }
 

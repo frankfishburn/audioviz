@@ -56,13 +56,13 @@ void AudioPlayer::update_offset() {
     }
 }
 
-Uint64 AudioPlayer::current_sample() {
+Uint64 AudioPlayer::current_sample() const {
     Uint64 sample =
         (Uint64)round(current_time() * (double)source_.sample_rate());
     return std::max((Uint64)1, std::min(source_.num_samples(), sample));
 }
 
-double AudioPlayer::current_time() {
+double AudioPlayer::current_time() const {
     Uint64 position = timer_offset_;
 
     if (playing_) {
@@ -73,7 +73,7 @@ double AudioPlayer::current_time() {
     return position / (double)SDL_GetPerformanceFrequency();
 }
 
-std::string AudioPlayer::current_time_str() {
+std::string AudioPlayer::current_time_str() const {
     double seconds = current_time();
 
     int hours = floor(seconds / 3600);

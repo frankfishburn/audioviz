@@ -9,7 +9,7 @@
 
 class STFT {
    public:
-    STFT(SpectrogramInput props, SpectrogramConfig conf);
+    STFT(SpectrogramInput props, SpectrogramConfig config);
     ~STFT();
 
     unsigned long length() const;
