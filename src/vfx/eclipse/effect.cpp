@@ -42,6 +42,8 @@ FXEclipse::FXEclipse(const IAudioSource& audio_source, const FrameBuffer& fb)
 
     // Set static uniforms
     program_.set_uniform("num_freq", (int)stft_.length());
+    program_.set_uniform("min_note", -50);
+    program_.set_uniform("max_note", 50);
     program_.set_uniform("resolution", (float)fb_.width(), (float)fb_.height());
 
     // Set up vertex buffer/array object for each channel
