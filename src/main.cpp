@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
     Window window;
 
     // Create a framebuffer
-    FrameBuffer fb(window, true);
+    FrameBuffer fb(window.width(), window.height(), true);
 
     // Setup visual effect renderer
     EclipseVisual visual(audio_source, fb);
@@ -84,10 +84,10 @@ int main(int argc, char** argv) {
 
                 case SDL_WINDOWEVENT:
                     if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-                        fb.freshen();
-                        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-                        glViewport(0, 0, e.window.data1, e.window.data2);
-                        visual.set_resolution(fb.width(), fb.height());
+                        const int width = e.window.data1;
+                        const int height = e.window.data2;
+                        fb.set_resolution(width, height);
+                        visual.set_resolution(width, height);
                     }
                     break;
 

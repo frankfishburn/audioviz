@@ -23,8 +23,8 @@ const char *src_blurv_frag_MSAA =
 #include "shaders/blurv_frag_MSAA.glsl"
     ;
 
-FrameBuffer::FrameBuffer(const Window &window, bool do_msaa)
-    : window(window), do_msaa(do_msaa) {
+FrameBuffer::FrameBuffer(const int width, const int height, bool do_msaa)
+    : width_(width), height_(height), do_msaa(do_msaa) {
     init();
 }
 
@@ -59,9 +59,6 @@ void FrameBuffer::init() {
         vblur_shader.compile(src_copy_vert, src_blurv_frag_noMSAA);
     }
 
-    // Get window size
-    width_ = window.width();
-    height_ = window.height();
     GLenum status;
 
     // Create 2 textures and framebuffers
@@ -104,7 +101,9 @@ void FrameBuffer::deinit() {
     }
 }
 
-void FrameBuffer::freshen() {
+void FrameBuffer::set_resolution(const int width, const int height) {
+    width_ = width;
+    height_ = height;
     deinit();
     init();
 }
@@ -124,7 +123,7 @@ void FrameBuffer::bind() const {
 void FrameBuffer::unbind() const {
     // Unbind FrameBuffer render target
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, window.width(), window.height());
+    glViewport(0, 0, width_, height_);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 }
@@ -137,8 +136,8 @@ void FrameBuffer::draw() {
     // Render offscreen buffer to screen
     glBindFramebuffer(GL_READ_FRAMEBUFFER, buffer[0]);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    glBlitFramebuffer(0, 0, width_, height_, 0, 0, window.width(),
-                      window.height(), GL_COLOR_BUFFER_BIT, GL_LINEAR);
+    glBlitFramebuffer(0, 0, width_, height_, 0, 0, width_, height_,
+                      GL_COLOR_BUFFER_BIT, GL_LINEAR);
 }
 
 void FrameBuffer::apply_bloom() {
