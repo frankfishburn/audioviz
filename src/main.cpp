@@ -8,10 +8,11 @@
 #include "algorithm/stft.h"
 #include "audio/file_source.h"
 #include "audio/player.h"
-#include "vfx/eclipse/effect.h"
 #include "video/framebuffer.h"
 #include "video/shader_program.h"
 #include "video/window.h"
+#include "visuals/eclipse/eclipse.h"
+#include "visuals/liquid/liquid.h"
 
 using namespace std;
 
@@ -48,7 +49,7 @@ int main(int argc, char** argv) {
     FrameBuffer fb(window, true);
 
     // Setup visual effect renderer
-    FXEclipse vfx(audio_source, fb);
+    EclipseVisual visual(audio_source, fb);
 
     // Enable v-sync
     SDL_GL_SetSwapInterval(1);
@@ -86,7 +87,7 @@ int main(int argc, char** argv) {
                         fb.freshen();
                         glBindFramebuffer(GL_FRAMEBUFFER, 0);
                         glViewport(0, 0, e.window.data1, e.window.data2);
-                        vfx.set_resolution(fb.width(), fb.height());
+                        visual.set_resolution(fb.width(), fb.height());
                     }
                     break;
 
@@ -132,7 +133,7 @@ int main(int argc, char** argv) {
 
         // Render visual effects for current position into framebuffer
         long current_sample = audio_player.current_sample();
-        vfx.draw(current_sample);
+        visual.draw(current_sample);
 
         // Draw framebuffer to screen
         fb.draw();

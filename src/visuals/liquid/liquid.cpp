@@ -1,12 +1,12 @@
-#include "effect.h"
+#include "liquid.h"
 
 #include <vector>
 
 static const char* src_shader_vertex =
-#include "vfx/eclipse/vertex.glsl"
+#include "visuals/liquid/vertex.glsl"
     ;
 static const char* src_shader_fragment =
-#include "vfx/eclipse/fragment.glsl"
+#include "visuals/liquid/fragment.glsl"
     ;
 
 static constexpr unsigned long segment_length = 16384;
@@ -31,13 +31,14 @@ static STFT create_stft(const IAudioSource& audio_source) {
     return STFT(props, config);
 }
 
-FXEclipse::FXEclipse(const IAudioSource& audio_source, const FrameBuffer& fb)
+LiquidVisual::LiquidVisual(const IAudioSource& audio_source,
+                           const FrameBuffer& fb)
     : audio_source_(audio_source), stft_(create_stft(audio_source)), fb_(fb) {
     // Compile and link shader
     program_.compile(src_shader_vertex, src_shader_fragment);
 
     // Set data parameters and allocate
-    num_vertices_ = 2 * stft_.length();
+    num_vertices_ = 4 * stft_.length();
     vertices_.resize(num_vertices_);
 
     // Set static uniforms
@@ -58,7 +59,7 @@ FXEclipse::FXEclipse(const IAudioSource& audio_source, const FrameBuffer& fb)
     program_.set_attrib("amplitude", 1);
 }
 
-void FXEclipse::draw(const unsigned long position) {
+void LiquidVisual::draw(const unsigned long position) {
     // Get signal at current position
     const unsigned long center = position - segment_length / 2;
     std::vector<float> signal_left =
@@ -75,10 +76,10 @@ void FXEclipse::draw(const unsigned long position) {
         std::vector<float> power_right = stft_.compute(signal_right);
 
         // Arrange spectra in vertex array
-        for (unsigned long idx = 0; idx < stft_.length(); idx++)
-            vertices_[idx] = power_left[idx];
-        for (unsigned long idx = 0; idx < stft_.length(); idx++)
-            vertices_[num_vertices_ - idx - 1] = power_right[idx];
+        for (unsigned long idx = 0; idx < stft_.length(); idx++) {
+            vertices_[2 * idx + 1] = -power_left[idx];
+            vertices_[num_vertices_ - 2 * idx] = power_right[idx];
+        }
 
     } else {
         // Clear out vertex array
@@ -93,16 +94,16 @@ void FXEclipse::draw(const unsigned long position) {
     glBufferSubData(GL_ARRAY_BUFFER, 0, num_vertices_ * sizeof(GLfloat),
                     vertices_.data());
     glBindVertexArray(VAO_);
-    glDrawArrays(GL_LINE_LOOP, 0, num_vertices_);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, num_vertices_);
     fb_.unbind();
 }
 
-std::string FXEclipse::name() { return std::string("Eclipse"); }
+std::string LiquidVisual::name() { return std::string("Liquid"); }
 
-void FXEclipse::set_resolution(const float width, const float height) {
+void LiquidVisual::set_resolution(const float width, const float height) {
     program_.set_uniform("resolution", width, height);
 }
 
-void FXEclipse::set_resolution(const int width, const int height) {
+void LiquidVisual::set_resolution(const int width, const int height) {
     program_.set_uniform("resolution", (float)width, (float)height);
 }

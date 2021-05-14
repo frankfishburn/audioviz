@@ -9,8 +9,8 @@ add_executable(
   video/shader.cpp
   video/shader_program.cpp 
   video/window.cpp 
-  vfx/eclipse/effect.cpp
-  vfx/liquid/effect.cpp
+  visuals/eclipse/eclipse.cpp
+  visuals/liquid/liquid.cpp
 )
 target_include_directories(audioviz PUBLIC ${PROJECT_SOURCE_DIR}/src)
 target_include_directories(audioviz PUBLIC ${OPENGL_INCLUDE_DIR})

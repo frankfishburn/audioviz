@@ -8,15 +8,16 @@
 #include "audio/i_source.h"
 #include "video/framebuffer.h"
 #include "video/shader_program.h"
+#include "visuals/i_visual.h"
 
-class FXEclipse {
+class EclipseVisual : public IVisual {
    public:
-    FXEclipse(const IAudioSource&, const FrameBuffer&);
-    void draw(const unsigned long);
+    EclipseVisual(const IAudioSource&, const FrameBuffer&);
+    void draw(const unsigned long) override;
 
-    std::string name();
-    void set_resolution(const float width, const float height);
-    void set_resolution(const int width, const int height);
+    std::string name() override;
+    void set_resolution(const float width, const float height) override;
+    void set_resolution(const int width, const int height) override;
 
    private:
     const IAudioSource& audio_source_;
