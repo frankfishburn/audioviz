@@ -76,7 +76,7 @@ void FXEclipse::draw(const unsigned long position) {
         for (unsigned long idx = 0; idx < stft_.length(); idx++)
             vertices_[idx] = power_left[idx];
         for (unsigned long idx = 0; idx < stft_.length(); idx++)
-            vertices_[num_vertices_ - idx] = power_right[idx];
+            vertices_[num_vertices_ - idx - 1] = power_right[idx];
 
     } else {
         // Clear out vertex array
