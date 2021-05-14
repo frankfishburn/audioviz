@@ -4,9 +4,9 @@
 #include <cmath>      // INFINITY
 
 // Spectrum resampling parameters
-static constexpr float num_freq = 1000;
-static constexpr float min_freq = 25;
-static constexpr float max_freq = 7902;
+static constexpr int min_note = -50;  // 24.4997 Hz
+static constexpr int max_note = 50;   // 7902.1328 Hz
+static constexpr int num_note = 401;
 
 STFT::STFT(SpectrogramInput props, SpectrogramConfig config)
     : props_(props), config_(config) {
@@ -22,11 +22,12 @@ STFT::STFT(SpectrogramInput props, SpectrogramConfig config)
     spectrogram_get_freq(transform_, (void *)raw_frequencies_.data());
 
     // Allocate resampled spectra
-    std::vector<float> frequencies(num_freq);
-    const float increment = (log2(max_freq) - log2(min_freq)) / (num_freq - 1);
-
-    for (int idx = 0; idx < num_freq; idx++)
-        frequencies[idx] = pow(2, log2(min_freq) + idx * increment);
+    std::vector<float> frequencies(num_note);
+    const float step = (max_note - min_note) / (num_note - 1.0);
+    for (int idx = 0; idx < num_note; idx++) {
+        float note = min_note + idx * step;
+        frequencies[idx] = 440.0 * exp2(note / 12.0);
+    }
 
     // Setup resampler
     resampler_ = Resampler(raw_frequencies_, frequencies);
@@ -49,4 +50,4 @@ std::vector<float> STFT::compute(std::vector<float> &signal) const {
     return resampler_.resample(raw_power_);
 }
 
-unsigned long STFT::length() const { return num_freq; }
+unsigned long STFT::length() const { return num_note; }
