@@ -42,6 +42,7 @@ bool ShaderProgram::ready() const {
 
 void ShaderProgram::use() const {
     if (!ready()) throw "Cannot use a shader program that isn't ready";
+    VAO.bind();
     glUseProgram(program);
 }
 
@@ -82,11 +83,23 @@ void ShaderProgram::set_attrib(const char *name, int N, size_t stride) {
 
 void ShaderProgram::set_attrib(const char *name, int N, size_t stride,
                                size_t offset) {
+    VAO.bind();
     glUseProgram(program);
     GLint attrib = glGetAttribLocation(program, name);
     glEnableVertexAttribArray(attrib);
     glVertexAttribPointer(attrib, N, GL_FLOAT, GL_FALSE, stride,
                           (void *)offset);
+}
+
+void ShaderProgram::set_input(const char *name,
+                              const VertexBuffer &vertex_buffer) {
+    VAO.bind();
+    vertex_buffer.bind();
+    glUseProgram(program);
+    GLint attrib = glGetAttribLocation(program, name);
+    glEnableVertexAttribArray(attrib);
+    glVertexAttribPointer(attrib, 1, GL_FLOAT, GL_FALSE, sizeof(float),
+                          (void *)0);
 }
 
 std::string ShaderProgram::get_messages() {

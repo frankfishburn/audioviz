@@ -33,30 +33,23 @@ static STFT create_stft(const IAudioSource& audio_source) {
 
 LiquidVisual::LiquidVisual(const IAudioSource& audio_source,
                            const FrameBuffer& fb)
-    : audio_source_(audio_source), stft_(create_stft(audio_source)), fb_(fb) {
-    // Compile and link shader
-    program_.compile(src_shader_vertex, src_shader_fragment);
-
+    : audio_source_(audio_source),
+      stft_(create_stft(audio_source)),
+      fb_(fb),
+      vertex_buffer_(VertexBuffer(4 * stft_.length())) {
     // Set data parameters and allocate
     num_vertices_ = 4 * stft_.length();
     vertices_.resize(num_vertices_);
 
-    // Set static uniforms
+    // Compile and link shader
+    program_.compile(src_shader_vertex, src_shader_fragment);
+
+    // Set uniforms and array
     program_.set_uniform("num_freq", (int)stft_.length());
     program_.set_uniform("min_note", -50);
     program_.set_uniform("max_note", 50);
     program_.set_uniform("resolution", (float)fb_.width(), (float)fb_.height());
-
-    // Set up vertex buffer/array object for each channel
-    glGenVertexArrays(1, &VAO_);
-
-    glGenBuffers(1, &VBO_);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_);
-    glBufferData(GL_ARRAY_BUFFER, num_vertices_ * sizeof(GLfloat), NULL,
-                 GL_DYNAMIC_DRAW);
-
-    glBindVertexArray(VAO_);
-    program_.set_attrib("amplitude", 1);
+    program_.set_input("amplitude", vertex_buffer_);
 }
 
 void LiquidVisual::draw(const unsigned long position) {
@@ -87,13 +80,12 @@ void LiquidVisual::draw(const unsigned long position) {
             vertices_[idx] = 0;
     }
 
-    // Update the buffer
+    // Update the data
+    vertex_buffer_.push(vertices_.data());
+
+    // Draw
     fb_.bind();
     program_.use();
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, num_vertices_ * sizeof(GLfloat),
-                    vertices_.data());
-    glBindVertexArray(VAO_);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, num_vertices_);
     fb_.unbind();
 }

@@ -8,6 +8,7 @@
 #include "audio/i_source.h"
 #include "video/framebuffer.h"
 #include "video/shader_program.h"
+#include "video/vertex_buffer.h"
 #include "visuals/i_visual.h"
 
 class LiquidVisual : public IVisual {
@@ -27,8 +28,7 @@ class LiquidVisual : public IVisual {
     int num_vertices_;
     std::vector<float> vertices_;
     ShaderProgram program_;
-    GLuint VBO_;
-    GLuint VAO_;
+    VertexBuffer vertex_buffer_;
 };
 
 #endif /* LIQUID_H */

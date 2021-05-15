@@ -1,14 +1,16 @@
 add_executable(
-  audioviz 
-  main.cpp 
-  algorithm/resampler.cpp 
+  audioviz
+  main.cpp
+  algorithm/resampler.cpp
   algorithm/stft.cpp
-  audio/file_source.cpp  
-  audio/player.cpp 
+  audio/file_source.cpp
+  audio/player.cpp
   video/framebuffer.cpp
   video/shader.cpp
-  video/shader_program.cpp 
-  video/window.cpp 
+  video/shader_program.cpp
+  video/vertex_array.cpp
+  video/vertex_buffer.cpp
+  video/window.cpp
   visuals/eclipse/eclipse.cpp
   visuals/liquid/liquid.cpp
 )

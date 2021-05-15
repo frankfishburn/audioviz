@@ -8,6 +8,8 @@
 #include <string>
 
 #include "shader.h"
+#include "vertex_array.h"
+#include "vertex_buffer.h"
 
 class ShaderProgram {
    public:
@@ -30,11 +32,14 @@ class ShaderProgram {
     void set_attrib(const char *, int N, size_t stride);
     void set_attrib(const char *, int N);
     void set_attrib(const char *);
+    void set_input(const char *name, const VertexBuffer &vertex_buffer);
 
    private:
     GLuint program;
     Shader vertex_shader = Shader(vertex);
     Shader fragment_shader = Shader(fragment);
+    VertexArray VAO;
+
     std::string get_messages();
 };
 
